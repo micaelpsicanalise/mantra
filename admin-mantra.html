@@ -140,6 +140,7 @@
           <h2 id="yoga-form-title">Nova prática</h2>
           <input type="hidden" id="yoga-id">
           <input type="hidden" id="yoga-audio-url"><input type="hidden" id="yoga-duracao">
+          <input type="hidden" id="yoga-video-url">
           <div class="row">
             <div><label>Nome</label><input type="text" id="yoga-nome" placeholder="Respiração 4-7-8"></div>
             <div><label>Slug</label><input type="text" id="yoga-slug" placeholder="respiracao-4-7-8"></div>
@@ -154,6 +155,11 @@
           <label>Áudio guiado (opcional) — deixe em branco pra manter o atual</label>
           <input type="file" id="yoga-arquivo" accept="audio/*">
           <p id="yoga-upload-status" class="upload-status"></p>
+
+          <label>Vídeo (opcional, até 100MB — ideal pra ásanas) — deixe em branco pra manter o atual</label>
+          <input type="file" id="yoga-video-arquivo" accept="video/*">
+          <p id="yoga-video-status" class="upload-status"></p>
+          <video id="yoga-video-preview" controls style="display:none; width:100%; max-height:200px; margin-top:8px; border-radius:10px;"></video>
           <div class="checkbox-row"><input type="checkbox" id="yoga-ativo" checked><label style="margin:0;">Ativo</label></div>
           <div style="margin-top:16px; display:flex; gap:10px;">
             <button class="btn btn-primary" onclick="saveYoga()">Salvar prática</button>
@@ -161,7 +167,7 @@
           </div>
         </div>
         <div class="card"><h2>Práticas cadastradas</h2>
-          <table><thead><tr><th>Nome</th><th>Tipo</th><th>Nível</th><th></th></tr></thead><tbody id="yoga-table"></tbody></table>
+          <table><thead><tr><th>Nome</th><th>Tipo</th><th>Nível</th><th>Mídia</th><th></th></tr></thead><tbody id="yoga-table"></tbody></table>
         </div>
       </div>
 
@@ -214,7 +220,7 @@
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let session = null;
   const cache = { mantras: [], yantras: [], yoga: [], textos: [] };
-  const pendingFiles = { mantras: null, yantras: null, yoga: null };
+  const pendingFiles = { mantras: null, yantras: null, yoga: null, yogaVideo: null };
   const DIAS = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
 
   /* ---------------- AUTH ---------------- */
@@ -402,11 +408,29 @@
     pendingFiles.yoga = e.target.files[0] || null;
     document.getElementById("yoga-upload-status").textContent = pendingFiles.yoga ? `Selecionado: ${pendingFiles.yoga.name}` : "";
   });
+  document.getElementById("yoga-video-arquivo").addEventListener("change", e => {
+    pendingFiles.yogaVideo = e.target.files[0] || null;
+    const status = document.getElementById("yoga-video-status");
+    status.textContent = pendingFiles.yogaVideo ? `Selecionado: ${pendingFiles.yogaVideo.name}` : "";
+    if (pendingFiles.yogaVideo) {
+      const preview = document.getElementById("yoga-video-preview");
+      preview.src = URL.createObjectURL(pendingFiles.yogaVideo);
+      preview.style.display = "block";
+    }
+  });
+  function getVideoDuration(file) {
+    return new Promise((resolve) => {
+      const v = document.createElement("video"); v.preload = "metadata";
+      v.onloadedmetadata = () => resolve(Math.round(v.duration));
+      v.src = URL.createObjectURL(file);
+    });
+  }
   function renderYogaTable() {
     document.getElementById("yoga-table").innerHTML = cache.yoga.map(p => `
       <tr><td>${esc(p.nome)}</td><td>${p.tipo||""}</td><td>${p.nivel||""}</td>
+      <td>${p.video_url ? "🎬 vídeo" : (p.audio_url ? "🔊 áudio" : "—")}</td>
       <td><button class="btn btn-sm" onclick="editYoga('${p.id}')">Editar</button></td></tr>
-    `).join("") || `<tr><td colspan="4" class="muted">Nenhuma ainda.</td></tr>`;
+    `).join("") || `<tr><td colspan="5" class="muted">Nenhuma ainda.</td></tr>`;
   }
   function editYoga(id) {
     const p = cache.yoga.find(x => x.id === id); if (!p) return;
@@ -420,19 +444,35 @@
     document.getElementById("yoga-ativo").checked = !!p.ativo;
     document.getElementById("yoga-audio-url").value = p.audio_url || "";
     document.getElementById("yoga-duracao").value = p.duracao_segundos || "";
+    document.getElementById("yoga-video-url").value = p.video_url || "";
+    const videoPreview = document.getElementById("yoga-video-preview");
+    if (p.video_url) { videoPreview.src = p.video_url; videoPreview.style.display = "block"; }
+    else { videoPreview.style.display = "none"; }
+    document.getElementById("yoga-video-arquivo").value = "";
+    pendingFiles.yogaVideo = null;
+    document.getElementById("yoga-video-status").textContent = "";
     document.getElementById("yoga-form-title").textContent = "Editar prática";
     pendingFiles.yoga = null; document.getElementById("yoga-arquivo").value = "";
     window.scrollTo({top:0, behavior:"smooth"});
   }
   async function saveYoga() {
     const status = document.getElementById("yoga-upload-status");
+    const videoStatus = document.getElementById("yoga-video-status");
     let audioUrl = document.getElementById("yoga-audio-url").value || null;
     let duracao = document.getElementById("yoga-duracao").value ? parseInt(document.getElementById("yoga-duracao").value) : null;
+    let videoUrl = document.getElementById("yoga-video-url").value || null;
     try {
       if (pendingFiles.yoga) {
         status.textContent = "Enviando áudio..."; status.classList.remove("error");
         duracao = await getAudioDuration(pendingFiles.yoga);
         audioUrl = await uploadArquivo(pendingFiles.yoga);
+      }
+      if (pendingFiles.yogaVideo) {
+        videoStatus.textContent = "Enviando vídeo... pode levar um tempo dependendo do tamanho."; videoStatus.classList.remove("error");
+        const videoDuracao = await getVideoDuration(pendingFiles.yogaVideo);
+        if (!duracao) duracao = videoDuracao;
+        videoUrl = await uploadArquivo(pendingFiles.yogaVideo);
+        videoStatus.textContent = "Vídeo enviado.";
       }
       const id = document.getElementById("yoga-id").value;
       const payload = {
@@ -443,13 +483,16 @@
         descricao: document.getElementById("yoga-descricao").value.trim() || null,
         ordem: parseInt(document.getElementById("yoga-ordem").value) || 0,
         ativo: document.getElementById("yoga-ativo").checked,
-        audio_url: audioUrl, duracao_segundos: duracao,
+        audio_url: audioUrl, duracao_segundos: duracao, video_url: videoUrl,
       };
       if (!payload.nome || !payload.slug) { alert("Nome e slug são obrigatórios."); return; }
       const { error } = id ? await supabaseClient.from("mantra_praticas_yoga").update(payload).eq("id", id) : await supabaseClient.from("mantra_praticas_yoga").insert(payload);
       if (error) throw error;
       resetForm("yoga"); await loadAll();
-    } catch (err) { status.textContent = "Erro: " + err.message; status.classList.add("error"); }
+    } catch (err) {
+      status.textContent = "Erro: " + err.message; status.classList.add("error");
+      videoStatus.textContent = ""; videoStatus.classList.remove("error");
+    }
   }
 
   /* ============ TEXTOS ============ */
@@ -541,8 +584,9 @@
     document.querySelectorAll(`#panel-${kind} input[type=hidden]`).forEach(el => el.value = "");
     document.querySelectorAll(`#panel-${kind} input[type=checkbox]`).forEach(el => el.checked = true);
     document.querySelectorAll(`#panel-${kind} input[type=file]`).forEach(el => el.value = "");
-    const status = document.querySelector(`#panel-${kind} .upload-status`); if (status) status.textContent = "";
+    document.querySelectorAll(`#panel-${kind} .upload-status`).forEach(el => { el.textContent = ""; el.classList.remove("error"); });
     if (kind === "yantras") document.getElementById("yantras-preview").style.display = "none";
+    if (kind === "yoga") { document.getElementById("yoga-video-preview").style.display = "none"; pendingFiles.yogaVideo = null; }
     pendingFiles[kind] = null;
     const title = document.getElementById(`${kind}-form-title`);
     if (title) title.textContent = { mantras: "Novo mantra", yantras: "Novo yantra", yoga: "Nova prática", textos: "Novo texto" }[kind];

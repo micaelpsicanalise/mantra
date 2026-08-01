@@ -213,7 +213,7 @@
         <div><p class="detail-title" id="player-title">—</p><p class="detail-sub" id="player-sub"></p></div>
       </div>
 
-      <div class="player-box">
+      <div class="player-box" id="audio-player-box">
         <div class="waveform" id="player-waveform">
           <div class="bar" style="height:14px"></div><div class="bar" style="height:26px"></div>
           <div class="bar" style="height:38px"></div><div class="bar" style="height:20px"></div>
@@ -223,6 +223,8 @@
         <button class="play-btn" id="play-pause-btn" onclick="onTogglePlay()">▶</button>
         <div class="time-row"><span id="player-time-current">0:00</span><span id="player-time-total">—</span></div>
       </div>
+
+      <video id="video-player" controls playsinline style="display:none; width:100%; border-radius:18px; margin-bottom:18px; background:#000;"></video>
 
       <div id="player-sanskrit-block"></div>
       <p class="body-text" id="player-significado"></p>
@@ -378,8 +380,8 @@
         </div>`;
       if (cat === "yoga") return `
         <div class="list-item" onclick="onOpenYoga('${item.id}')">
-          <div class="dot">🧘</div>
-          <div class="meta"><p class="title">${esc(item.nome)}</p><p class="sub">${item.nivel || ""} · ${item.tipo || ""}</p></div>
+          <div class="dot">${item.video_url ? "🎬" : "🧘"}</div>
+          <div class="meta"><p class="title">${esc(item.nome)}</p><p class="sub">${item.nivel || ""} · ${item.tipo || ""}${item.video_url ? " · vídeo" : (item.audio_url ? " · áudio" : "")}</p></div>
           <span class="chev">›</span>
         </div>`;
       if (cat === "textos") return `
@@ -444,6 +446,8 @@
       ? `<p class="sanskrit">${esc(item.texto_sanscrito)}</p>` + (item.transliteracao ? `<p class="translit">${esc(item.transliteracao)}</p>` : "")
       : "";
     document.getElementById("player-significado").textContent = item.traducao || item.significado || "";
+    document.getElementById("video-player").style.display = "none";
+    document.getElementById("audio-player-box").style.display = "block";
     setupAudio(item.audio_url, item.duracao_segundos);
     showView("player");
   }
@@ -456,7 +460,20 @@
     document.getElementById("player-sub").textContent = `${item.tipo || ""} · ${item.nivel || ""}`;
     document.getElementById("player-sanskrit-block").innerHTML = "";
     document.getElementById("player-significado").textContent = item.descricao || "";
-    setupAudio(item.audio_url, item.duracao_segundos);
+
+    const videoEl = document.getElementById("video-player");
+    const audioBox = document.getElementById("audio-player-box");
+    if (item.video_url) {
+      videoEl.src = item.video_url;
+      videoEl.style.display = "block";
+      audioBox.style.display = "none";
+      document.getElementById("audio-player").removeAttribute("src");
+    } else {
+      videoEl.removeAttribute("src");
+      videoEl.style.display = "none";
+      audioBox.style.display = "block";
+      setupAudio(item.audio_url, item.duracao_segundos);
+    }
     showView("player");
   }
 
@@ -498,6 +515,12 @@
     document.getElementById("play-pause-btn").textContent = "▶";
     if (appState.currentPlayerItem) {
       marcarConcluido(appState.currentPlayerItem.tipo, appState.currentPlayerItem.id, Math.floor(document.getElementById("audio-player").duration || 0));
+    }
+  });
+
+  document.getElementById("video-player").addEventListener("ended", () => {
+    if (appState.currentPlayerItem) {
+      marcarConcluido(appState.currentPlayerItem.tipo, appState.currentPlayerItem.id, Math.floor(document.getElementById("video-player").duration || 0));
     }
   });
 
