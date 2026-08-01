@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Mantra</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2.111.0"></script>
+<style>
+  :root{ --bg:#F7F1E6; --ink:#241F33; --ink-soft:#5C5772; --indigo:#2C2A4A; --indigo-dark:#191830; --saffron:#E08D3C; --saffron-soft:#F4DDBB; --line:rgba(36,31,51,0.16); --danger:#A33B2E; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Inter', system-ui, sans-serif; font-size:14px; }
+  .wrap{ max-width:960px; margin:0 auto; padding:28px 20px 80px; }
+  h1{ font-size:20px; margin:0 0 4px; }
+  h2{ font-size:16px; margin:0 0 14px; }
+  .muted{ color:var(--ink-soft); font-size:12.5px; }
+  .view{ display:none; } .view.active{ display:block; }
+  .gate.active{ display:flex; }
+  .btn{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:600; border:1px solid var(--line); background:#fff; color:var(--ink); }
+  .btn-primary{ background:var(--indigo-dark); color:#fff; border-color:var(--indigo-dark); }
+  .btn-sm{ padding:6px 12px; font-size:12px; }
+  .gate{ min-height:100vh; align-items:center; justify-content:center; flex-direction:column; gap:14px; text-align:center; padding:20px; }
+  .tabs{ display:flex; gap:0; margin:18px 0 22px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .tab-btn{ padding:10px 4px; margin-right:18px; font-size:13.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; }
+  .tab-btn.active{ color:var(--ink); border-color:var(--saffron); }
+  .card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; }
+  label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin:12px 0 5px; }
+  label:first-child{ margin-top:0; }
+  input[type=text], input[type=number], textarea, select{ width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:9px; font-family:inherit; font-size:13.5px; background:var(--bg); }
+  textarea{ min-height:70px; resize:vertical; }
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .checkbox-row{ display:flex; align-items:center; gap:8px; margin-top:14px; }
+  .checkbox-row input{ width:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th, td{ text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  th{ font-size:11px; text-transform:uppercase; color:var(--ink-soft); }
+  audio{ height:32px; max-width:160px; }
+  img.thumb{ width:36px; height:36px; border-radius:8px; object-fit:cover; }
+  #upload-status{ font-size:12.5px; margin-top:8px; color:var(--ink-soft); }
+  #upload-status.error{ color:var(--danger); }
+</style>
+</head>
+<body>
+
+  <div id="view-gate" class="gate view active">
+    <h1>Admin — Mantra</h1>
+    <button class="btn btn-primary" onclick="onSignIn()">Entrar com Google</button>
+    <p class="muted" id="gate-msg"></p>
+  </div>
+
+  <div id="view-admin" class="view">
+    <div class="wrap">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><h1>Admin — Mantra</h1><p class="muted" id="admin-email"></p></div>
+        <button class="btn btn-sm" onclick="onSignOut()">Sair</button>
+      </div>
+
+      <div class="tabs">
+        <span class="tab-btn active" data-tab="mantras" onclick="switchTab('mantras')">Mantras</span>
+        <span class="tab-btn" data-tab="yantras" onclick="switchTab('yantras')">Yantras</span>
+        <span class="tab-btn" data-tab="yoga" onclick="switchTab('yoga')">Yoga</span>
+        <span class="tab-btn" data-tab="textos" onclick="switchTab('textos')">Textos</span>
+        <span class="tab-btn" data-tab="dia" onclick="switchTab('dia')">Prática do dia</span>
+      </div>
+
+      <!-- ---------- MANTRAS ---------- -->
+      <div id="panel-mantras" class="panel">
+        <div class="card">
+          <h2 id="mantras-form-title">Novo mantra</h2>
+          <input type="hidden" id="mantras-id">
+          <input type="hidden" id="mantras-audio-url"><input type="hidden" id="mantras-duracao">
+          <div class="row">
+            <div><label>Nome</label><input type="text" id="mantras-nome" placeholder="Gayatri Mantra"></div>
+            <div><label>Slug</label><input type="text" id="mantras-slug" placeholder="gayatri"></div>
+          </div>
+          <label>Texto em sânscrito</label>
+          <textarea id="mantras-sanscrito"></textarea>
+          <label>Transliteração</label>
+          <textarea id="mantras-translit"></textarea>
+          <label>Tradução</label>
+          <textarea id="mantras-traducao"></textarea>
+          <label>Significado (explicação mais longa)</label>
+          <textarea id="mantras-significado"></textarea>
+          <div class="row">
+            <div><label>Categoria</label><input type="text" id="mantras-categoria" placeholder="gayatri, bija, shanti..."></div>
+            <div><label>Voz (crédito, opcional)</label><input type="text" id="mantras-voz"></div>
+          </div>
+          <label>Áudio (mp3) — deixe em branco pra manter o atual</label>
+          <input type="file" id="mantras-arquivo" accept="audio/*">
+          <p id="mantras-upload-status" class="upload-status"></p>
+          <div class="row" style="margin-top:12px;">
+            <div><label>Ordem</label><input type="number" id="mantras-ordem" value="0"></div>
+            <div class="checkbox-row" style="margin-top:32px;"><input type="checkbox" id="mantras-ativo" checked><label style="margin:0;">Ativo</label></div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="saveMantra()">Salvar mantra</button>
+            <button class="btn" onclick="resetForm('mantras')">Novo mantra</button>
+          </div>
+        </div>
+        <div class="card"><h2>Mantras cadastrados</h2>
+          <table><thead><tr><th>Nome</th><th>Categoria</th><th>Áudio</th><th></th></tr></thead><tbody id="mantras-table"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ---------- YANTRAS ---------- -->
+      <div id="panel-yantras" class="panel" style="display:none;">
+        <div class="card">
+          <h2 id="yantras-form-title">Novo yantra</h2>
+          <input type="hidden" id="yantras-id">
+          <input type="hidden" id="yantras-imagem-url">
+          <div class="row">
+            <div><label>Nome</label><input type="text" id="yantras-nome" placeholder="Sri Yantra"></div>
+            <div><label>Slug</label><input type="text" id="yantras-slug" placeholder="sri-yantra"></div>
+          </div>
+          <label>Deidade associada</label>
+          <input type="text" id="yantras-deidade">
+          <label>Significado</label>
+          <textarea id="yantras-significado"></textarea>
+          <label>Imagem — deixe em branco pra manter a atual</label>
+          <input type="file" id="yantras-arquivo" accept="image/*">
+          <p id="yantras-upload-status" class="upload-status"></p>
+          <img id="yantras-preview" style="display:none; width:120px; height:120px; object-fit:cover; border-radius:12px; margin-top:8px;">
+          <div class="row" style="margin-top:12px;">
+            <div><label>Ordem</label><input type="number" id="yantras-ordem" value="0"></div>
+            <div class="checkbox-row" style="margin-top:32px;"><input type="checkbox" id="yantras-ativo" checked><label style="margin:0;">Ativo</label></div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="saveYantra()">Salvar yantra</button>
+            <button class="btn" onclick="resetForm('yantras')">Novo yantra</button>
+          </div>
+        </div>
+        <div class="card"><h2>Yantras cadastrados</h2>
+          <table><thead><tr><th>Imagem</th><th>Nome</th><th>Deidade</th><th></th></tr></thead><tbody id="yantras-table"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ---------- YOGA ---------- -->
+      <div id="panel-yoga" class="panel" style="display:none;">
+        <div class="card">
+          <h2 id="yoga-form-title">Nova prática</h2>
+          <input type="hidden" id="yoga-id">
+          <input type="hidden" id="yoga-audio-url"><input type="hidden" id="yoga-duracao">
+          <div class="row">
+            <div><label>Nome</label><input type="text" id="yoga-nome" placeholder="Respiração 4-7-8"></div>
+            <div><label>Slug</label><input type="text" id="yoga-slug" placeholder="respiracao-4-7-8"></div>
+          </div>
+          <div class="row3">
+            <div><label>Tipo</label><select id="yoga-tipo"><option value="asana">Ásana</option><option value="pranayama">Pranayama</option><option value="meditacao">Meditação</option></select></div>
+            <div><label>Nível</label><select id="yoga-nivel"><option value="iniciante">Iniciante</option><option value="intermediario">Intermediário</option><option value="avancado">Avançado</option></select></div>
+            <div><label>Ordem</label><input type="number" id="yoga-ordem" value="0"></div>
+          </div>
+          <label>Descrição</label>
+          <textarea id="yoga-descricao"></textarea>
+          <label>Áudio guiado (opcional) — deixe em branco pra manter o atual</label>
+          <input type="file" id="yoga-arquivo" accept="audio/*">
+          <p id="yoga-upload-status" class="upload-status"></p>
+          <div class="checkbox-row"><input type="checkbox" id="yoga-ativo" checked><label style="margin:0;">Ativo</label></div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="saveYoga()">Salvar prática</button>
+            <button class="btn" onclick="resetForm('yoga')">Nova prática</button>
+          </div>
+        </div>
+        <div class="card"><h2>Práticas cadastradas</h2>
+          <table><thead><tr><th>Nome</th><th>Tipo</th><th>Nível</th><th></th></tr></thead><tbody id="yoga-table"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ---------- TEXTOS ---------- -->
+      <div id="panel-textos" class="panel" style="display:none;">
+        <div class="card">
+          <h2 id="textos-form-title">Novo texto</h2>
+          <input type="hidden" id="textos-id">
+          <div class="row">
+            <div><label>Título</label><input type="text" id="textos-titulo"></div>
+            <div><label>Slug</label><input type="text" id="textos-slug"></div>
+          </div>
+          <label>Fonte</label>
+          <input type="text" id="textos-fonte" placeholder="Bhagavad Gita, capítulo 2, verso 47">
+          <label>Corpo do texto</label>
+          <textarea id="textos-corpo" style="min-height:160px;"></textarea>
+          <div class="row" style="margin-top:12px;">
+            <div><label>Ordem</label><input type="number" id="textos-ordem" value="0"></div>
+            <div class="checkbox-row" style="margin-top:32px;"><input type="checkbox" id="textos-ativo" checked><label style="margin:0;">Ativo</label></div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="saveTexto()">Salvar texto</button>
+            <button class="btn" onclick="resetForm('textos')">Novo texto</button>
+          </div>
+        </div>
+        <div class="card"><h2>Textos cadastrados</h2>
+          <table><thead><tr><th>Título</th><th>Fonte</th><th></th></tr></thead><tbody id="textos-table"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ---------- PRÁTICA DO DIA ---------- -->
+      <div id="panel-dia" class="panel" style="display:none;">
+        <div class="card">
+          <h2>Prática do dia — um item fixo por dia da semana</h2>
+          <p class="muted" style="margin-bottom:14px;">Escolha o tipo, depois o item específico, pra cada dia.</p>
+          <div id="dia-form-list"></div>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="saveDia()">Salvar prática do dia</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const SUPABASE_URL = "https://aewcxqzpbipwcdpsjfht.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_mINpOQLVbi0pilHc9bEtBA_l1a0o6c6";
+  const ADMIN_UUID   = "af619e44-1049-4ebd-86b4-4b4fa3bce94b";
+  const AUDIO_WORKER_URL = "https://umbanda-audio-upload.micaelpsicanalise.workers.dev";
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let session = null;
+  const cache = { mantras: [], yantras: [], yoga: [], textos: [] };
+  const pendingFiles = { mantras: null, yantras: null, yoga: null };
+  const DIAS = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+
+  /* ---------------- AUTH ---------------- */
+  async function onSignIn() {
+    await supabaseClient.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
+  }
+  async function onSignOut() { await supabaseClient.auth.signOut(); location.reload(); }
+
+  async function checkSession() {
+    const { data: { session: s } } = await supabaseClient.auth.getSession();
+    if (!s) return showGate("");
+    if (s.user.id !== ADMIN_UUID) return showGate("Essa conta não tem acesso de admin.");
+    session = s;
+    document.getElementById("admin-email").textContent = s.user.email;
+    document.getElementById("view-gate").classList.remove("active");
+    document.getElementById("view-admin").classList.add("active");
+    await loadAll();
+  }
+  function showGate(msg) {
+    document.getElementById("gate-msg").textContent = msg;
+    document.getElementById("view-gate").classList.add("active");
+    document.getElementById("view-admin").classList.remove("active");
+  }
+
+  /* ---------------- TABS ---------------- */
+  function switchTab(name) {
+    document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
+    document.getElementById("panel-" + name).style.display = "block";
+    document.querySelectorAll(".tab-btn").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  }
+
+  /* ---------------- CARREGAR TUDO ---------------- */
+  async function loadAll() {
+    const [m, y, p, t] = await Promise.all([
+      supabaseClient.from("mantra_mantras").select("*").order("ordem"),
+      supabaseClient.from("mantra_yantras").select("*").order("ordem"),
+      supabaseClient.from("mantra_praticas_yoga").select("*").order("ordem"),
+      supabaseClient.from("mantra_textos").select("*").order("ordem"),
+    ]);
+    cache.mantras = m.data || []; cache.yantras = y.data || []; cache.yoga = p.data || []; cache.textos = t.data || [];
+    renderMantrasTable(); renderYantrasTable(); renderYogaTable(); renderTextosTable(); renderDiaForm();
+  }
+
+  function esc(s) { const d = document.createElement("div"); d.textContent = s ?? ""; return d.innerHTML; }
+
+  async function uploadArquivo(file) {
+    const resp = await fetch(AUDIO_WORKER_URL + "/upload", {
+      method: "PUT",
+      headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": file.type, "X-Filename": "mantra-" + file.name },
+      body: file,
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || "Falha no upload");
+    return data.url;
+  }
+  function getAudioDuration(file) {
+    return new Promise((resolve) => {
+      const a = document.createElement("audio"); a.preload = "metadata";
+      a.onloadedmetadata = () => resolve(Math.round(a.duration));
+      a.src = URL.createObjectURL(file);
+    });
+  }
+
+  /* ============ MANTRAS ============ */
+  document.getElementById("mantras-arquivo").addEventListener("change", e => {
+    pendingFiles.mantras = e.target.files[0] || null;
+    document.getElementById("mantras-upload-status").textContent = pendingFiles.mantras ? `Selecionado: ${pendingFiles.mantras.name}` : "";
+  });
+
+  function renderMantrasTable() {
+    document.getElementById("mantras-table").innerHTML = cache.mantras.map(m => `
+      <tr><td>${esc(m.nome)}</td><td>${esc(m.categoria || "")}</td>
+      <td>${m.audio_url ? `<audio controls src="${m.audio_url}"></audio>` : `<span class="muted">sem áudio</span>`}</td>
+      <td><button class="btn btn-sm" onclick="editMantra('${m.id}')">Editar</button></td></tr>
+    `).join("") || `<tr><td colspan="4" class="muted">Nenhum ainda.</td></tr>`;
+  }
+  function editMantra(id) {
+    const m = cache.mantras.find(x => x.id === id); if (!m) return;
+    document.getElementById("mantras-id").value = m.id;
+    document.getElementById("mantras-nome").value = m.nome || "";
+    document.getElementById("mantras-slug").value = m.slug || "";
+    document.getElementById("mantras-sanscrito").value = m.texto_sanscrito || "";
+    document.getElementById("mantras-translit").value = m.transliteracao || "";
+    document.getElementById("mantras-traducao").value = m.traducao || "";
+    document.getElementById("mantras-significado").value = m.significado || "";
+    document.getElementById("mantras-categoria").value = m.categoria || "";
+    document.getElementById("mantras-voz").value = m.voz || "";
+    document.getElementById("mantras-ordem").value = m.ordem || 0;
+    document.getElementById("mantras-ativo").checked = !!m.ativo;
+    document.getElementById("mantras-audio-url").value = m.audio_url || "";
+    document.getElementById("mantras-duracao").value = m.duracao_segundos || "";
+    document.getElementById("mantras-form-title").textContent = "Editar mantra";
+    pendingFiles.mantras = null; document.getElementById("mantras-arquivo").value = "";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  async function saveMantra() {
+    const status = document.getElementById("mantras-upload-status");
+    let audioUrl = document.getElementById("mantras-audio-url").value || null;
+    let duracao = document.getElementById("mantras-duracao").value ? parseInt(document.getElementById("mantras-duracao").value) : null;
+    try {
+      if (pendingFiles.mantras) {
+        status.textContent = "Enviando áudio..."; status.classList.remove("error");
+        duracao = await getAudioDuration(pendingFiles.mantras);
+        audioUrl = await uploadArquivo(pendingFiles.mantras);
+      }
+      const id = document.getElementById("mantras-id").value;
+      const payload = {
+        nome: document.getElementById("mantras-nome").value.trim(),
+        slug: document.getElementById("mantras-slug").value.trim(),
+        texto_sanscrito: document.getElementById("mantras-sanscrito").value.trim() || null,
+        transliteracao: document.getElementById("mantras-translit").value.trim() || null,
+        traducao: document.getElementById("mantras-traducao").value.trim() || null,
+        significado: document.getElementById("mantras-significado").value.trim() || null,
+        categoria: document.getElementById("mantras-categoria").value.trim() || null,
+        voz: document.getElementById("mantras-voz").value.trim() || null,
+        ordem: parseInt(document.getElementById("mantras-ordem").value) || 0,
+        ativo: document.getElementById("mantras-ativo").checked,
+        audio_url: audioUrl, duracao_segundos: duracao,
+      };
+      if (!payload.nome || !payload.slug) { alert("Nome e slug são obrigatórios."); return; }
+      const { error } = id ? await supabaseClient.from("mantra_mantras").update(payload).eq("id", id) : await supabaseClient.from("mantra_mantras").insert(payload);
+      if (error) throw error;
+      resetForm("mantras"); await loadAll();
+    } catch (err) { status.textContent = "Erro: " + err.message; status.classList.add("error"); }
+  }
+
+  /* ============ YANTRAS ============ */
+  document.getElementById("yantras-arquivo").addEventListener("change", e => {
+    pendingFiles.yantras = e.target.files[0] || null;
+    document.getElementById("yantras-upload-status").textContent = pendingFiles.yantras ? `Selecionado: ${pendingFiles.yantras.name}` : "";
+    if (pendingFiles.yantras) {
+      const preview = document.getElementById("yantras-preview");
+      preview.src = URL.createObjectURL(pendingFiles.yantras); preview.style.display = "block";
+    }
+  });
+  function renderYantrasTable() {
+    document.getElementById("yantras-table").innerHTML = cache.yantras.map(y => `
+      <tr><td>${y.imagem_url ? `<img class="thumb" src="${y.imagem_url}">` : "—"}</td><td>${esc(y.nome)}</td><td>${esc(y.deidade_associada||"")}</td>
+      <td><button class="btn btn-sm" onclick="editYantra('${y.id}')">Editar</button></td></tr>
+    `).join("") || `<tr><td colspan="4" class="muted">Nenhum ainda.</td></tr>`;
+  }
+  function editYantra(id) {
+    const y = cache.yantras.find(x => x.id === id); if (!y) return;
+    document.getElementById("yantras-id").value = y.id;
+    document.getElementById("yantras-nome").value = y.nome || "";
+    document.getElementById("yantras-slug").value = y.slug || "";
+    document.getElementById("yantras-deidade").value = y.deidade_associada || "";
+    document.getElementById("yantras-significado").value = y.significado || "";
+    document.getElementById("yantras-ordem").value = y.ordem || 0;
+    document.getElementById("yantras-ativo").checked = !!y.ativo;
+    document.getElementById("yantras-imagem-url").value = y.imagem_url || "";
+    const preview = document.getElementById("yantras-preview");
+    if (y.imagem_url) { preview.src = y.imagem_url; preview.style.display = "block"; } else preview.style.display = "none";
+    document.getElementById("yantras-form-title").textContent = "Editar yantra";
+    pendingFiles.yantras = null; document.getElementById("yantras-arquivo").value = "";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  async function saveYantra() {
+    const status = document.getElementById("yantras-upload-status");
+    let imagemUrl = document.getElementById("yantras-imagem-url").value || null;
+    try {
+      if (pendingFiles.yantras) {
+        status.textContent = "Enviando imagem..."; status.classList.remove("error");
+        imagemUrl = await uploadArquivo(pendingFiles.yantras);
+      }
+      const id = document.getElementById("yantras-id").value;
+      const payload = {
+        nome: document.getElementById("yantras-nome").value.trim(),
+        slug: document.getElementById("yantras-slug").value.trim(),
+        deidade_associada: document.getElementById("yantras-deidade").value.trim() || null,
+        significado: document.getElementById("yantras-significado").value.trim() || null,
+        ordem: parseInt(document.getElementById("yantras-ordem").value) || 0,
+        ativo: document.getElementById("yantras-ativo").checked,
+        imagem_url: imagemUrl,
+      };
+      if (!payload.nome || !payload.slug) { alert("Nome e slug são obrigatórios."); return; }
+      const { error } = id ? await supabaseClient.from("mantra_yantras").update(payload).eq("id", id) : await supabaseClient.from("mantra_yantras").insert(payload);
+      if (error) throw error;
+      resetForm("yantras"); await loadAll();
+    } catch (err) { status.textContent = "Erro: " + err.message; status.classList.add("error"); }
+  }
+
+  /* ============ YOGA ============ */
+  document.getElementById("yoga-arquivo").addEventListener("change", e => {
+    pendingFiles.yoga = e.target.files[0] || null;
+    document.getElementById("yoga-upload-status").textContent = pendingFiles.yoga ? `Selecionado: ${pendingFiles.yoga.name}` : "";
+  });
+  function renderYogaTable() {
+    document.getElementById("yoga-table").innerHTML = cache.yoga.map(p => `
+      <tr><td>${esc(p.nome)}</td><td>${p.tipo||""}</td><td>${p.nivel||""}</td>
+      <td><button class="btn btn-sm" onclick="editYoga('${p.id}')">Editar</button></td></tr>
+    `).join("") || `<tr><td colspan="4" class="muted">Nenhuma ainda.</td></tr>`;
+  }
+  function editYoga(id) {
+    const p = cache.yoga.find(x => x.id === id); if (!p) return;
+    document.getElementById("yoga-id").value = p.id;
+    document.getElementById("yoga-nome").value = p.nome || "";
+    document.getElementById("yoga-slug").value = p.slug || "";
+    document.getElementById("yoga-tipo").value = p.tipo || "asana";
+    document.getElementById("yoga-nivel").value = p.nivel || "iniciante";
+    document.getElementById("yoga-descricao").value = p.descricao || "";
+    document.getElementById("yoga-ordem").value = p.ordem || 0;
+    document.getElementById("yoga-ativo").checked = !!p.ativo;
+    document.getElementById("yoga-audio-url").value = p.audio_url || "";
+    document.getElementById("yoga-duracao").value = p.duracao_segundos || "";
+    document.getElementById("yoga-form-title").textContent = "Editar prática";
+    pendingFiles.yoga = null; document.getElementById("yoga-arquivo").value = "";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  async function saveYoga() {
+    const status = document.getElementById("yoga-upload-status");
+    let audioUrl = document.getElementById("yoga-audio-url").value || null;
+    let duracao = document.getElementById("yoga-duracao").value ? parseInt(document.getElementById("yoga-duracao").value) : null;
+    try {
+      if (pendingFiles.yoga) {
+        status.textContent = "Enviando áudio..."; status.classList.remove("error");
+        duracao = await getAudioDuration(pendingFiles.yoga);
+        audioUrl = await uploadArquivo(pendingFiles.yoga);
+      }
+      const id = document.getElementById("yoga-id").value;
+      const payload = {
+        nome: document.getElementById("yoga-nome").value.trim(),
+        slug: document.getElementById("yoga-slug").value.trim(),
+        tipo: document.getElementById("yoga-tipo").value,
+        nivel: document.getElementById("yoga-nivel").value,
+        descricao: document.getElementById("yoga-descricao").value.trim() || null,
+        ordem: parseInt(document.getElementById("yoga-ordem").value) || 0,
+        ativo: document.getElementById("yoga-ativo").checked,
+        audio_url: audioUrl, duracao_segundos: duracao,
+      };
+      if (!payload.nome || !payload.slug) { alert("Nome e slug são obrigatórios."); return; }
+      const { error } = id ? await supabaseClient.from("mantra_praticas_yoga").update(payload).eq("id", id) : await supabaseClient.from("mantra_praticas_yoga").insert(payload);
+      if (error) throw error;
+      resetForm("yoga"); await loadAll();
+    } catch (err) { status.textContent = "Erro: " + err.message; status.classList.add("error"); }
+  }
+
+  /* ============ TEXTOS ============ */
+  function renderTextosTable() {
+    document.getElementById("textos-table").innerHTML = cache.textos.map(t => `
+      <tr><td>${esc(t.titulo)}</td><td>${esc(t.fonte||"")}</td>
+      <td><button class="btn btn-sm" onclick="editTexto('${t.id}')">Editar</button></td></tr>
+    `).join("") || `<tr><td colspan="3" class="muted">Nenhum ainda.</td></tr>`;
+  }
+  function editTexto(id) {
+    const t = cache.textos.find(x => x.id === id); if (!t) return;
+    document.getElementById("textos-id").value = t.id;
+    document.getElementById("textos-titulo").value = t.titulo || "";
+    document.getElementById("textos-slug").value = t.slug || "";
+    document.getElementById("textos-fonte").value = t.fonte || "";
+    document.getElementById("textos-corpo").value = t.corpo || "";
+    document.getElementById("textos-ordem").value = t.ordem || 0;
+    document.getElementById("textos-ativo").checked = !!t.ativo;
+    document.getElementById("textos-form-title").textContent = "Editar texto";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  async function saveTexto() {
+    const id = document.getElementById("textos-id").value;
+    const payload = {
+      titulo: document.getElementById("textos-titulo").value.trim(),
+      slug: document.getElementById("textos-slug").value.trim(),
+      fonte: document.getElementById("textos-fonte").value.trim() || null,
+      corpo: document.getElementById("textos-corpo").value.trim(),
+      ordem: parseInt(document.getElementById("textos-ordem").value) || 0,
+      ativo: document.getElementById("textos-ativo").checked,
+    };
+    if (!payload.titulo || !payload.slug || !payload.corpo) { alert("Título, slug e corpo são obrigatórios."); return; }
+    const { error } = id ? await supabaseClient.from("mantra_textos").update(payload).eq("id", id) : await supabaseClient.from("mantra_textos").insert(payload);
+    if (error) { alert("Erro: " + error.message); return; }
+    resetForm("textos"); await loadAll();
+  }
+
+  /* ============ PRÁTICA DO DIA ============ */
+  async function renderDiaForm() {
+    const { data: atual } = await supabaseClient.from("mantra_pratica_do_dia").select("*");
+    const map = {}; (atual || []).forEach(d => map[d.dia_semana] = d);
+
+    document.getElementById("dia-form-list").innerHTML = DIAS.map((nome, i) => {
+      const atual_dia = map[i];
+      return `
+        <div class="row" style="align-items:end; margin-bottom:10px;">
+          <div><label>${nome}</label>
+            <select id="dia-tipo-${i}" onchange="renderDiaItemSelect(${i})">
+              <option value="">— nenhum —</option>
+              <option value="mantra" ${atual_dia?.tipo === "mantra" ? "selected" : ""}>Mantra</option>
+              <option value="yantra" ${atual_dia?.tipo === "yantra" ? "selected" : ""}>Yantra</option>
+              <option value="yoga" ${atual_dia?.tipo === "yoga" ? "selected" : ""}>Yoga</option>
+              <option value="texto" ${atual_dia?.tipo === "texto" ? "selected" : ""}>Texto</option>
+            </select>
+          </div>
+          <div><label>Item</label><select id="dia-item-${i}"></select></div>
+        </div>`;
+    }).join("");
+
+    DIAS.forEach((_, i) => renderDiaItemSelect(i, map[i]?.referencia_id));
+  }
+  function renderDiaItemSelect(i, selectedId) {
+    const tipo = document.getElementById(`dia-tipo-${i}`).value;
+    const table = { mantra: "mantras", yantra: "yantras", yoga: "yoga", texto: "textos" }[tipo];
+    const select = document.getElementById(`dia-item-${i}`);
+    if (!table) { select.innerHTML = ""; select.disabled = true; return; }
+    select.disabled = false;
+    const items = cache[table] || [];
+    select.innerHTML = items.map(it => `<option value="${it.id}" ${it.id === selectedId ? "selected" : ""}>${esc(it.nome || it.titulo)}</option>`).join("");
+  }
+  async function saveDia() {
+    const rows = [];
+    DIAS.forEach((_, i) => {
+      const tipo = document.getElementById(`dia-tipo-${i}`).value;
+      const itemId = document.getElementById(`dia-item-${i}`).value;
+      if (tipo && itemId) rows.push({ dia_semana: i, tipo, referencia_id: itemId });
+    });
+    await supabaseClient.from("mantra_pratica_do_dia").delete().neq("dia_semana", -1);
+    if (rows.length) {
+      const { error } = await supabaseClient.from("mantra_pratica_do_dia").insert(rows);
+      if (error) { alert("Erro: " + error.message); return; }
+    }
+    alert("Prática do dia salva.");
+  }
+
+  /* ---------------- RESET ---------------- */
+  function resetForm(kind) {
+    document.querySelectorAll(`#panel-${kind} input[type=text], #panel-${kind} input[type=number], #panel-${kind} textarea`).forEach(el => el.value = el.type === "number" ? 0 : "");
+    document.querySelectorAll(`#panel-${kind} input[type=hidden]`).forEach(el => el.value = "");
+    document.querySelectorAll(`#panel-${kind} input[type=checkbox]`).forEach(el => el.checked = true);
+    document.querySelectorAll(`#panel-${kind} input[type=file]`).forEach(el => el.value = "");
+    const status = document.querySelector(`#panel-${kind} .upload-status`); if (status) status.textContent = "";
+    if (kind === "yantras") document.getElementById("yantras-preview").style.display = "none";
+    pendingFiles[kind] = null;
+    const title = document.getElementById(`${kind}-form-title`);
+    if (title) title.textContent = { mantras: "Novo mantra", yantras: "Novo yantra", yoga: "Nova prática", textos: "Novo texto" }[kind];
+  }
+
+  document.addEventListener("DOMContentLoaded", checkSession);
+</script>
+</body>
+</html>
