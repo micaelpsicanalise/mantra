@@ -2,7 +2,7 @@
   "name": "Mantra — Prática Diária",
   "short_name": "Mantra",
   "description": "Mantras, yantras e práticas de yoga, sempre à mão.",
-  "start_url": "./app-mantra.html",
+  "start_url": "app/",
   "display": "standalone",
   "background_color": "#191830",
   "theme_color": "#191830",
