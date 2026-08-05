@@ -128,6 +128,15 @@
   .profile-header{ text-align:center; margin-bottom:22px; }
   .avatar-circle{ width:64px; height:64px; border-radius:50%; background:var(--saffron-soft); color:var(--saffron); font-family:'Fraunces',serif; font-size:24px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
   .signout-btn{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center; font-size:13px; cursor:pointer; margin-top:10px; }
+
+  /* formulário */
+  .form-label{ font-size:12px; font-weight:600; color:var(--ink-soft); margin:14px 0 6px; display:block; }
+  .form-input{
+    width:100%; background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:11px 13px; font-family:'Inter',sans-serif; font-size:13.5px; color:var(--ink);
+  }
+  .cidade-sugestao{ background:#fff; border:1px solid var(--line); border-top:none; border-radius:0 0 12px 12px; padding:10px 13px; font-size:12.5px; cursor:pointer; }
+  .cidade-sugestao:hover{ background:var(--saffron-soft); }
 </style>
 </head>
 <body>
@@ -266,6 +275,45 @@
       <div id="quiz-opcoes" style="display:flex; flex-direction:column; gap:10px;"></div>
     </section>
 
+    <!-- ================= NASCIMENTO (dados pro Jyotish) ================= -->
+    <section id="view-nascimento" class="view">
+      <div class="detail-head">
+        <span class="back-btn" onclick="showView('perfil')">‹</span>
+        <div><p class="detail-title">Astrologia védica (Jyotish)</p>
+          <p class="detail-sub">Pra calcular, precisamos do seu nascimento</p></div>
+      </div>
+
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:16px; line-height:1.5;">
+        Quanto mais exata a hora, mais preciso o resultado — poucos minutos de diferença já podem mudar o cálculo.
+      </p>
+
+      <label class="form-label">Data de nascimento</label>
+      <input type="date" id="nasc-data" class="form-input">
+
+      <label class="form-label">Hora de nascimento</label>
+      <input type="time" id="nasc-hora" class="form-input">
+
+      <label class="form-label">Fuso horário do local de nascimento</label>
+      <select id="nasc-fuso" class="form-input">
+        <option value="-2">Fernando de Noronha (UTC-2)</option>
+        <option value="-3" selected>Brasília, São Paulo, Rio (UTC-3)</option>
+        <option value="-4">Manaus, Cuiabá (UTC-4)</option>
+        <option value="-5">Rio Branco (UTC-5)</option>
+        <option value="0">Lisboa / Londres (UTC+0)</option>
+        <option value="1">Europa continental (UTC+1)</option>
+        <option value="custom">Outro (informar manualmente)</option>
+      </select>
+      <input type="number" id="nasc-fuso-manual" class="form-input" placeholder="Ex: -3.5" style="display:none;" step="0.5">
+
+      <label class="form-label">Cidade de nascimento</label>
+      <input type="text" id="nasc-cidade-busca" class="form-input" placeholder="Digite pra buscar..." oninput="onBuscarCidade(this.value)">
+      <div id="nasc-cidade-sugestoes"></div>
+      <p class="body-text" id="nasc-cidade-selecionada" style="font-size:12px; color:var(--ink-soft); margin-top:6px;"></p>
+
+      <button class="btn-primary" id="nasc-btn-calcular" onclick="onCalcularJyotish()" disabled>Calcular meu Ishta Devata</button>
+      <p class="body-text" id="nasc-erro" style="font-size:12px; color:#A33B2E; margin-top:8px;"></p>
+    </section>
+
     <!-- ================= RESULTADO ISHTA DEVATA ================= -->
     <section id="view-ishta-resultado" class="view">
       <div class="detail-head">
@@ -282,7 +330,7 @@
       <button class="signout-btn" onclick="showView('quiz'); iniciarQuiz();">Refazer o quiz</button>
 
       <div class="quick-card" id="jyotish-teaser" onclick="onQuerJyotish()" style="margin-top:14px;">
-        <p class="name">🔭 Em breve: descubra por astrologia védica (Jyotish)</p>
+        <p class="name">🔭 Descobrir por astrologia védica (Jyotish)</p>
         <p class="count" id="jyotish-teaser-sub">Um cálculo real, a partir do seu mapa de nascimento</p>
       </div>
     </section>
@@ -303,7 +351,7 @@
       <div class="signout-btn" onclick="showView('quiz'); iniciarQuiz();">Escolher / trocar minha divindade de conexão</div>
 
       <div class="quick-card" id="jyotish-teaser-perfil" onclick="onQuerJyotish()" style="margin-top:10px;">
-        <p class="name">🔭 Em breve: descubra por astrologia védica (Jyotish)</p>
+        <p class="name">🔭 Descobrir por astrologia védica (Jyotish)</p>
         <p class="count" id="jyotish-teaser-perfil-sub">Um cálculo real, a partir do seu mapa de nascimento</p>
       </div>
 
@@ -471,13 +519,101 @@
     }
   }
 
-  async function onQuerJyotish() {
-    const { error } = await supabaseClient.from("mantra_jyotish_interesse").upsert({ user_id: appState.user.id });
-    const subs = [document.getElementById("jyotish-teaser-sub"), document.getElementById("jyotish-teaser-perfil-sub")];
-    subs.forEach(sub => {
-      if (!sub) return;
-      sub.textContent = error ? "Não deu pra registrar agora — tenta de novo." : "Anotado ✓ — avisamos quando estiver pronto.";
+  function onQuerJyotish() {
+    showView("nascimento");
+  }
+
+  /* ---------------- FORMULÁRIO DE NASCIMENTO (Jyotish) ---------------- */
+  appState.nascimento = { cidadeSelecionada: null };
+  let buscaCidadeTimeout = null;
+
+  document.getElementById("nasc-fuso").addEventListener("change", (e) => {
+    document.getElementById("nasc-fuso-manual").style.display = e.target.value === "custom" ? "block" : "none";
+    validarFormNascimento();
+  });
+  document.getElementById("nasc-data").addEventListener("input", validarFormNascimento);
+  document.getElementById("nasc-hora").addEventListener("input", validarFormNascimento);
+  document.getElementById("nasc-fuso-manual").addEventListener("input", validarFormNascimento);
+
+  function onBuscarCidade(termo) {
+    appState.nascimento.cidadeSelecionada = null;
+    document.getElementById("nasc-cidade-selecionada").textContent = "";
+    validarFormNascimento();
+
+    clearTimeout(buscaCidadeTimeout);
+    const box = document.getElementById("nasc-cidade-sugestoes");
+    if (!termo || termo.trim().length < 3) { box.innerHTML = ""; return; }
+
+    // debounce de 600ms — a API do Nominatim pede uso moderado (nada de
+    // disparar uma request por tecla digitada)
+    buscaCidadeTimeout = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(termo)}`;
+        const resp = await fetch(url);
+        const resultados = await resp.json();
+        if (!resultados.length) { box.innerHTML = `<div class="cidade-sugestao">Nada encontrado</div>`; return; }
+        box.innerHTML = resultados.map((r, i) => `
+          <div class="cidade-sugestao" onclick="onSelecionarCidade(${i})">${esc(r.display_name)}</div>
+        `).join("");
+        appState.nascimento.resultadosBusca = resultados;
+      } catch (e) {
+        box.innerHTML = `<div class="cidade-sugestao">Não deu pra buscar agora — tenta de novo</div>`;
+      }
+    }, 600);
+  }
+
+  function onSelecionarCidade(indice) {
+    const r = appState.nascimento.resultadosBusca[indice];
+    appState.nascimento.cidadeSelecionada = { nome: r.display_name, lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
+    document.getElementById("nasc-cidade-sugestoes").innerHTML = "";
+    document.getElementById("nasc-cidade-busca").value = "";
+    document.getElementById("nasc-cidade-selecionada").textContent = "📍 " + r.display_name;
+    validarFormNascimento();
+  }
+
+  function validarFormNascimento() {
+    const data = document.getElementById("nasc-data").value;
+    const hora = document.getElementById("nasc-hora").value;
+    const fusoSel = document.getElementById("nasc-fuso").value;
+    const fusoManual = document.getElementById("nasc-fuso-manual").value;
+    const cidade = appState.nascimento.cidadeSelecionada;
+    const fusoValido = fusoSel !== "custom" || (fusoManual !== "" && !isNaN(parseFloat(fusoManual)));
+    const ok = data && hora && fusoValido && cidade;
+    document.getElementById("nasc-btn-calcular").disabled = !ok;
+  }
+
+  async function onCalcularJyotish() {
+    const btn = document.getElementById("nasc-btn-calcular");
+    const erroEl = document.getElementById("nasc-erro");
+    erroEl.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Calculando...";
+
+    const data = document.getElementById("nasc-data").value;
+    const hora = document.getElementById("nasc-hora").value;
+    const fusoSel = document.getElementById("nasc-fuso").value;
+    const utcOffsetHoras = fusoSel === "custom" ? parseFloat(document.getElementById("nasc-fuso-manual").value) : parseFloat(fusoSel);
+    const { lat, lon } = appState.nascimento.cidadeSelecionada;
+
+    const { data: resultado, error } = await supabaseClient.functions.invoke("jyotish-calcular", {
+      body: { data, hora, utcOffsetHoras, latitude: lat, longitudeLeste: lon },
     });
+
+    btn.textContent = "Calcular meu Ishta Devata";
+    btn.disabled = false;
+
+    if (error || !resultado || resultado.error) {
+      erroEl.textContent = "Não deu pra calcular agora — confira os dados e tenta de novo.";
+      return;
+    }
+
+    if (!resultado.deidade) {
+      erroEl.textContent = "Não conseguimos determinar uma divindade a partir desses dados.";
+      return;
+    }
+
+    await loadIshtaDevata();
+    mostrarResultadoIshta(resultado.deidade);
   }
 
   /* ---------------- NAVEGAÇÃO ---------------- */
