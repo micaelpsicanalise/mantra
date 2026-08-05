@@ -40,15 +40,28 @@
   .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--saffron); font-weight:600; }
 
   /* login */
-  .login-view{ justify-content:center; align-items:center; text-align:center; gap:10px; }
-  .login-view h1{ font-size:26px; margin-top:12px; }
-  .login-view p.desc{ font-size:13px; color:var(--ink-soft); line-height:1.5; margin-top:6px; max-width:280px; }
+  .login-view{ justify-content:flex-start; align-items:stretch; text-align:left; padding:0 !important; gap:0; }
+  .login-view p.desc{ font-size:13px; color:var(--ink-soft); line-height:1.5; margin-top:6px; }
   .google-btn{
     display:flex; align-items:center; justify-content:center;
     background:#fff; border:1px solid var(--line); border-radius:14px;
     padding:13px 20px; font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600;
     cursor:pointer; width:100%; margin-top:22px; max-width:280px;
   }
+
+  /* hero da landing */
+  .hero{
+    background:var(--indigo-dark); color:#fff; padding:52px 24px 40px;
+    position:relative; overflow:hidden; text-align:center;
+  }
+  .hero .ring{ position:absolute; border:1px solid rgba(255,255,255,0.10); border-radius:50%; }
+  .hero .ring.r1{ width:320px; height:320px; top:-120px; left:50%; transform:translateX(-50%); }
+  .hero .ring.r2{ width:220px; height:220px; top:-70px; left:50%; transform:translateX(-50%); }
+  .hero .ring.r3{ width:120px; height:120px; top:-20px; left:50%; transform:translateX(-50%); }
+  .hero .om{ font-size:34px; color:var(--saffron); position:relative; }
+  .hero h1{ font-size:32px; color:#fff; margin-top:14px; position:relative; }
+  .hero .tagline{ font-size:13.5px; color:#D8D3E6; line-height:1.6; margin-top:10px; max-width:300px; margin-left:auto; margin-right:auto; position:relative; }
+  .hero .google-btn{ margin:24px auto 0; position:relative; }
 
   /* topo comum */
   .top-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
@@ -128,6 +141,15 @@
   .profile-header{ text-align:center; margin-bottom:22px; }
   .avatar-circle{ width:64px; height:64px; border-radius:50%; background:var(--saffron-soft); color:var(--saffron); font-family:'Fraunces',serif; font-size:24px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
   .signout-btn{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center; font-size:13px; cursor:pointer; margin-top:10px; }
+
+  /* formulário */
+  .form-label{ font-size:12px; font-weight:600; color:var(--ink-soft); margin:14px 0 6px; display:block; }
+  .form-input{
+    width:100%; background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:11px 13px; font-family:'Inter',sans-serif; font-size:13.5px; color:var(--ink);
+  }
+  .cidade-sugestao{ background:#fff; border:1px solid var(--line); border-top:none; border-radius:0 0 12px 12px; padding:10px 13px; font-size:12.5px; cursor:pointer; }
+  .cidade-sugestao:hover{ background:var(--saffron-soft); }
 </style>
 </head>
 <body>
@@ -135,11 +157,14 @@
 
     <!-- ================= LOGIN ================= -->
     <section id="view-login" class="view login-view active">
-      <p class="eyebrow">Prática diária</p>
-      <h1>Mantra</h1>
-      <p class="desc">Mantras, yantras e práticas de yoga — um espaço pra voltar todo dia.</p>
-      <button class="google-btn" onclick="onSignIn()">Continuar com Google</button>
-      <p class="desc" id="login-error" style="color:#A33B2E;"></p>
+      <div class="hero">
+        <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+        <p class="om">🕉</p>
+        <h1>Mantra</h1>
+        <p class="tagline">Mantras, yantras e práticas de yoga — um espaço sagrado que cabe no bolso.</p>
+        <button class="google-btn" onclick="onSignIn()">Continuar com Google</button>
+        <p class="body-text" id="login-error" style="color:#A33B2E; font-size:11px; margin-top:10px;"></p>
+      </div>
     </section>
 
     <!-- ================= HOME ================= -->
@@ -156,6 +181,8 @@
         <p class="sub" id="day-sub"></p>
         <span class="btn-inline">Praticar agora</span>
       </div>
+
+      <div id="ishta-home-card" style="margin-bottom:16px;"></div>
 
       <div class="stat-row">
         <div class="stat"><p class="num" id="stat-streak">0</p><p class="label">dias seguidos</p></div>
@@ -253,6 +280,77 @@
       <button class="btn-primary" onclick="marcarConcluido('texto')">Marcar como lido</button>
     </section>
 
+    <!-- ================= QUIZ ISHTA DEVATA ================= -->
+    <section id="view-quiz" class="view">
+      <div class="detail-head">
+        <span class="back-btn" onclick="showView('perfil')">‹</span>
+        <div><p class="detail-title">Sua divindade de conexão</p>
+          <p class="detail-sub" id="quiz-progresso">Pergunta 1 de 5</p></div>
+      </div>
+      <h3 style="font-size:16px; margin-bottom:18px;" id="quiz-pergunta">—</h3>
+      <div id="quiz-opcoes" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </section>
+
+    <!-- ================= NASCIMENTO (dados pro Jyotish) ================= -->
+    <section id="view-nascimento" class="view">
+      <div class="detail-head">
+        <span class="back-btn" onclick="showView('perfil')">‹</span>
+        <div><p class="detail-title">Astrologia védica (Jyotish)</p>
+          <p class="detail-sub">Pra calcular, precisamos do seu nascimento</p></div>
+      </div>
+
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:16px; line-height:1.5;">
+        Quanto mais exata a hora, mais preciso o resultado — poucos minutos de diferença já podem mudar o cálculo.
+      </p>
+
+      <label class="form-label">Data de nascimento</label>
+      <input type="date" id="nasc-data" class="form-input">
+
+      <label class="form-label">Hora de nascimento</label>
+      <input type="time" id="nasc-hora" class="form-input">
+
+      <label class="form-label">Fuso horário do local de nascimento</label>
+      <select id="nasc-fuso" class="form-input">
+        <option value="-2">Fernando de Noronha (UTC-2)</option>
+        <option value="-3" selected>Brasília, São Paulo, Rio (UTC-3)</option>
+        <option value="-4">Manaus, Cuiabá (UTC-4)</option>
+        <option value="-5">Rio Branco (UTC-5)</option>
+        <option value="0">Lisboa / Londres (UTC+0)</option>
+        <option value="1">Europa continental (UTC+1)</option>
+        <option value="custom">Outro (informar manualmente)</option>
+      </select>
+      <input type="number" id="nasc-fuso-manual" class="form-input" placeholder="Ex: -3.5" style="display:none;" step="0.5">
+
+      <label class="form-label">Cidade de nascimento</label>
+      <input type="text" id="nasc-cidade-busca" class="form-input" placeholder="Digite pra buscar..." oninput="onBuscarCidade(this.value)">
+      <div id="nasc-cidade-sugestoes"></div>
+      <p class="body-text" id="nasc-cidade-selecionada" style="font-size:12px; color:var(--ink-soft); margin-top:6px;"></p>
+
+      <button class="btn-primary" id="nasc-btn-calcular" onclick="onCalcularJyotish()" disabled>Calcular meu Ishta Devata</button>
+      <p class="body-text" id="nasc-erro" style="font-size:12px; color:#A33B2E; margin-top:8px;"></p>
+    </section>
+
+    <!-- ================= RESULTADO ISHTA DEVATA ================= -->
+    <section id="view-ishta-resultado" class="view">
+      <div class="detail-head">
+        <span class="back-btn" onclick="showView('perfil')">‹</span>
+        <div><p class="detail-title">Sua divindade de conexão</p></div>
+      </div>
+      <div style="text-align:center; margin-bottom:18px;">
+        <div class="avatar-circle" id="ishta-inicial" style="width:72px;height:72px;font-size:28px;">?</div>
+        <h2 id="ishta-nome" style="font-size:22px; margin-top:10px;">—</h2>
+        <p class="eyebrow" id="ishta-arquetipo" style="margin-top:4px;">—</p>
+      </div>
+      <p class="body-text" id="ishta-descricao"></p>
+      <button class="btn-primary" onclick="onVerYantraIshta()">Ver yantra e mantra</button>
+      <button class="signout-btn" onclick="showView('quiz'); iniciarQuiz();">Refazer o quiz</button>
+
+      <div class="quick-card" id="jyotish-teaser" onclick="onQuerJyotish()" style="margin-top:14px;">
+        <p class="name">🔭 Descobrir por astrologia védica (Jyotish)</p>
+        <p class="count" id="jyotish-teaser-sub">Um cálculo real, a partir do seu mapa de nascimento</p>
+      </div>
+    </section>
+
     <!-- ================= PERFIL ================= -->
     <section id="view-perfil" class="view">
       <div class="top-row"><h3>Perfil</h3></div>
@@ -265,7 +363,15 @@
         <div class="stat"><p class="num" id="perfil-streak">0</p><p class="label">dias seguidos</p></div>
         <div class="stat"><p class="num" id="perfil-total">0</p><p class="label">práticas concluídas</p></div>
       </div>
-      <div class="signout-btn" onclick="onSignOut()">Sair da conta</div>
+
+      <div class="signout-btn" onclick="showView('quiz'); iniciarQuiz();">Escolher / trocar minha divindade de conexão</div>
+
+      <div class="quick-card" id="jyotish-teaser-perfil" onclick="onQuerJyotish()" style="margin-top:10px;">
+        <p class="name">🔭 Descobrir por astrologia védica (Jyotish)</p>
+        <p class="count" id="jyotish-teaser-perfil-sub">Um cálculo real, a partir do seu mapa de nascimento</p>
+      </div>
+
+      <div class="signout-btn" onclick="onSignOut()" style="margin-top:10px;">Sair da conta</div>
 
       <div class="tabbar">
         <button class="tab" onclick="showView('home')"><span class="glyph"></span>Início</button>
@@ -286,7 +392,245 @@
     catalogo: { mantras: [], yantras: [], yoga: [], textos: [] },
     categoriaAtiva: "mantras",
     currentPlayerItem: null, // {tipo, id}
+    quiz: { indice: 0, pontos: {} },
+    ishtaDevata: null, // { nome, arquetipo, descricao, yantra_id, mantra_id }
   };
+
+  /* ---------------- QUIZ ISHTA DEVATA ---------------- */
+  const ISHTA_QUIZ = [
+    {
+      pergunta: "O que mais pesa pra você agora?",
+      opcoes: [
+        { texto: "Mente cheia, difícil ter silêncio", peso: { shiva: 2 } },
+        { texto: "Falta de direção, decisões travadas", peso: { ganesha: 2 } },
+        { texto: "Instabilidade financeira", peso: { lakshmi: 2 } },
+        { texto: "Medo ou insegurança constante", peso: { durga: 2 } },
+      ],
+    },
+    {
+      pergunta: "Se pudesse mudar uma coisa em você amanhã, seria...",
+      opcoes: [
+        { texto: "Ter mais coragem de cortar o que não serve", peso: { kali: 2 } },
+        { texto: "Amar e viver mais leve, com menos peso", peso: { krishna: 2 } },
+        { texto: "Ter mais foco e clareza mental", peso: { saraswati: 2 } },
+        { texto: "Ter mais paz e menos reatividade", peso: { shiva: 1, durga: 1 } },
+      ],
+    },
+    {
+      pergunta: "Qual palavra combina mais com o que você busca?",
+      opcoes: [
+        { texto: "Proteção", peso: { durga: 2 } },
+        { texto: "Abundância", peso: { lakshmi: 2 } },
+        { texto: "Sabedoria", peso: { saraswati: 1, ganesha: 1 } },
+        { texto: "Transformação", peso: { kali: 2 } },
+      ],
+    },
+    {
+      pergunta: "Diante de um problema difícil, você tende a...",
+      opcoes: [
+        { texto: "Recuar e buscar silêncio antes de agir", peso: { shiva: 2 } },
+        { texto: "Agir com o coração, mesmo sem certeza", peso: { krishna: 2 } },
+        { texto: "Pensar em todos os ângulos antes de decidir", peso: { saraswati: 2 } },
+        { texto: "Encarar de frente, sem medo do confronto", peso: { kali: 1, durga: 1 } },
+      ],
+    },
+    {
+      pergunta: "Qual dessas frases mais soa como você?",
+      opcoes: [
+        { texto: "Preciso começar de novo em algo", peso: { ganesha: 2 } },
+        { texto: "Preciso de coragem pra romper um padrão", peso: { kali: 1, durga: 1 } },
+        { texto: "Preciso de leveza e alegria no dia a dia", peso: { krishna: 2 } },
+        { texto: "Preciso de estabilidade material", peso: { lakshmi: 2 } },
+      ],
+    },
+  ];
+
+  function iniciarQuiz() {
+    appState.quiz = { indice: 0, pontos: {} };
+    renderPerguntaQuiz();
+  }
+
+  function renderPerguntaQuiz() {
+    const q = ISHTA_QUIZ[appState.quiz.indice];
+    document.getElementById("quiz-progresso").textContent =
+      `Pergunta ${appState.quiz.indice + 1} de ${ISHTA_QUIZ.length}`;
+    document.getElementById("quiz-pergunta").textContent = q.pergunta;
+    document.getElementById("quiz-opcoes").innerHTML = q.opcoes.map((op, i) => `
+      <div class="list-item" onclick="onResponderQuiz(${i})">
+        <div class="meta"><p class="title">${esc(op.texto)}</p></div>
+        <span class="chev">›</span>
+      </div>`).join("");
+  }
+
+  function onResponderQuiz(indiceOpcao) {
+    const q = ISHTA_QUIZ[appState.quiz.indice];
+    const peso = q.opcoes[indiceOpcao].peso;
+    for (const slug in peso) {
+      appState.quiz.pontos[slug] = (appState.quiz.pontos[slug] || 0) + peso[slug];
+    }
+    appState.quiz.indice++;
+    if (appState.quiz.indice < ISHTA_QUIZ.length) {
+      renderPerguntaQuiz();
+    } else {
+      finalizarQuiz();
+    }
+  }
+
+  async function finalizarQuiz() {
+    const pontos = appState.quiz.pontos;
+    const slugVencedor = Object.keys(pontos).sort((a, b) => pontos[b] - pontos[a])[0];
+    if (!slugVencedor) return showView("perfil");
+
+    const { data: deidade } = await supabaseClient
+      .from("mantra_deidades").select("*").eq("slug", slugVencedor).maybeSingle();
+    if (!deidade) return showView("perfil");
+
+    await supabaseClient.from("mantra_perfil_espiritual").upsert({
+      user_id: appState.user.id, deidade_id: deidade.id, metodo: "quiz",
+    });
+
+    await loadIshtaDevata();
+    mostrarResultadoIshta(deidade);
+  }
+
+  async function loadIshtaDevata() {
+    const { data } = await supabaseClient
+      .from("mantra_perfil_espiritual")
+      .select("*, mantra_deidades(*)")
+      .eq("user_id", appState.user.id)
+      .maybeSingle();
+    appState.ishtaDevata = data?.mantra_deidades || null;
+    renderIshtaCardHome();
+  }
+
+  function mostrarResultadoIshta(deidade) {
+    document.getElementById("ishta-inicial").textContent = deidade.nome.charAt(0);
+    document.getElementById("ishta-nome").textContent = deidade.nome;
+    document.getElementById("ishta-arquetipo").textContent = deidade.arquetipo;
+    document.getElementById("ishta-descricao").textContent = deidade.descricao;
+    showView("ishta-resultado");
+  }
+
+  function onVerYantraIshta() {
+    if (appState.ishtaDevata?.yantra_id) return onOpenYantra(appState.ishtaDevata.yantra_id);
+    if (appState.ishtaDevata?.mantra_id) return onOpenMantra(appState.ishtaDevata.mantra_id);
+  }
+
+  function renderIshtaCardHome() {
+    const el = document.getElementById("ishta-home-card");
+    if (!el) return;
+    if (!appState.ishtaDevata) {
+      el.innerHTML = `
+        <div class="quick-card" onclick="showView('quiz'); iniciarQuiz();">
+          <p class="name">Descubra sua divindade de conexão</p>
+          <p class="count">Quiz de 5 perguntas</p>
+        </div>`;
+    } else {
+      const d = appState.ishtaDevata;
+      el.innerHTML = `
+        <div class="quick-card" onclick="onVerYantraIshta()">
+          <p class="name">${esc(d.nome)}</p>
+          <p class="count">Sua divindade de conexão</p>
+        </div>`;
+    }
+  }
+
+  function onQuerJyotish() {
+    showView("nascimento");
+  }
+
+  /* ---------------- FORMULÁRIO DE NASCIMENTO (Jyotish) ---------------- */
+  appState.nascimento = { cidadeSelecionada: null };
+  let buscaCidadeTimeout = null;
+
+  document.getElementById("nasc-fuso").addEventListener("change", (e) => {
+    document.getElementById("nasc-fuso-manual").style.display = e.target.value === "custom" ? "block" : "none";
+    validarFormNascimento();
+  });
+  document.getElementById("nasc-data").addEventListener("input", validarFormNascimento);
+  document.getElementById("nasc-hora").addEventListener("input", validarFormNascimento);
+  document.getElementById("nasc-fuso-manual").addEventListener("input", validarFormNascimento);
+
+  function onBuscarCidade(termo) {
+    appState.nascimento.cidadeSelecionada = null;
+    document.getElementById("nasc-cidade-selecionada").textContent = "";
+    validarFormNascimento();
+
+    clearTimeout(buscaCidadeTimeout);
+    const box = document.getElementById("nasc-cidade-sugestoes");
+    if (!termo || termo.trim().length < 3) { box.innerHTML = ""; return; }
+
+    // debounce de 600ms — a API do Nominatim pede uso moderado (nada de
+    // disparar uma request por tecla digitada)
+    buscaCidadeTimeout = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(termo)}`;
+        const resp = await fetch(url);
+        const resultados = await resp.json();
+        if (!resultados.length) { box.innerHTML = `<div class="cidade-sugestao">Nada encontrado</div>`; return; }
+        box.innerHTML = resultados.map((r, i) => `
+          <div class="cidade-sugestao" onclick="onSelecionarCidade(${i})">${esc(r.display_name)}</div>
+        `).join("");
+        appState.nascimento.resultadosBusca = resultados;
+      } catch (e) {
+        box.innerHTML = `<div class="cidade-sugestao">Não deu pra buscar agora — tenta de novo</div>`;
+      }
+    }, 600);
+  }
+
+  function onSelecionarCidade(indice) {
+    const r = appState.nascimento.resultadosBusca[indice];
+    appState.nascimento.cidadeSelecionada = { nome: r.display_name, lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
+    document.getElementById("nasc-cidade-sugestoes").innerHTML = "";
+    document.getElementById("nasc-cidade-busca").value = "";
+    document.getElementById("nasc-cidade-selecionada").textContent = "📍 " + r.display_name;
+    validarFormNascimento();
+  }
+
+  function validarFormNascimento() {
+    const data = document.getElementById("nasc-data").value;
+    const hora = document.getElementById("nasc-hora").value;
+    const fusoSel = document.getElementById("nasc-fuso").value;
+    const fusoManual = document.getElementById("nasc-fuso-manual").value;
+    const cidade = appState.nascimento.cidadeSelecionada;
+    const fusoValido = fusoSel !== "custom" || (fusoManual !== "" && !isNaN(parseFloat(fusoManual)));
+    const ok = data && hora && fusoValido && cidade;
+    document.getElementById("nasc-btn-calcular").disabled = !ok;
+  }
+
+  async function onCalcularJyotish() {
+    const btn = document.getElementById("nasc-btn-calcular");
+    const erroEl = document.getElementById("nasc-erro");
+    erroEl.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Calculando...";
+
+    const data = document.getElementById("nasc-data").value;
+    const hora = document.getElementById("nasc-hora").value;
+    const fusoSel = document.getElementById("nasc-fuso").value;
+    const utcOffsetHoras = fusoSel === "custom" ? parseFloat(document.getElementById("nasc-fuso-manual").value) : parseFloat(fusoSel);
+    const { lat, lon } = appState.nascimento.cidadeSelecionada;
+
+    const { data: resultado, error } = await supabaseClient.functions.invoke("jyotish-calcular", {
+      body: { data, hora, utcOffsetHoras, latitude: lat, longitudeLeste: lon },
+    });
+
+    btn.textContent = "Calcular meu Ishta Devata";
+    btn.disabled = false;
+
+    if (error || !resultado || resultado.error) {
+      erroEl.textContent = "Não deu pra calcular agora — confira os dados e tenta de novo.";
+      return;
+    }
+
+    if (!resultado.deidade) {
+      erroEl.textContent = "Não conseguimos determinar uma divindade a partir desses dados.";
+      return;
+    }
+
+    await loadIshtaDevata();
+    mostrarResultadoIshta(resultado.deidade);
+  }
 
   /* ---------------- NAVEGAÇÃO ---------------- */
   function showView(name) {
@@ -323,7 +667,7 @@
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return showView("login");
     appState.user = session.user;
-    await Promise.all([loadCatalogo(), loadHome(), loadPerfil()]);
+    await Promise.all([loadCatalogo(), loadHome(), loadPerfil(), loadIshtaDevata()]);
     showView("home");
   }
 
