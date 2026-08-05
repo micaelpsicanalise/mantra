@@ -61,6 +61,7 @@
         <span class="tab-btn" data-tab="yoga" onclick="switchTab('yoga')">Yoga</span>
         <span class="tab-btn" data-tab="textos" onclick="switchTab('textos')">Textos</span>
         <span class="tab-btn" data-tab="dia" onclick="switchTab('dia')">Prática do dia</span>
+        <span class="tab-btn" data-tab="deidades" onclick="switchTab('deidades')">Deidades</span>
       </div>
 
       <!-- ---------- MANTRAS ---------- -->
@@ -208,6 +209,42 @@
         </div>
       </div>
 
+      <!-- ---------- DEIDADES (Ishta Devata) ---------- -->
+      <div id="panel-deidades" class="panel" style="display:none;">
+        <div class="card">
+          <h2 id="deidades-form-title">Nova deidade</h2>
+          <input type="hidden" id="deidades-id">
+          <input type="hidden" id="deidades-murti-url">
+          <div class="row">
+            <div><label>Nome</label><input type="text" id="deidades-nome" placeholder="Ganesha"></div>
+            <div><label>Slug</label><input type="text" id="deidades-slug" placeholder="ganesha"></div>
+          </div>
+          <label>Arquétipo</label>
+          <input type="text" id="deidades-arquetipo" placeholder="O Removedor de Obstáculos">
+          <label>Descrição</label>
+          <textarea id="deidades-descricao"></textarea>
+          <div class="row">
+            <div><label>Yantra associado</label><select id="deidades-yantra"><option value="">— nenhum —</option></select></div>
+            <div><label>Mantra associado</label><select id="deidades-mantra"><option value="">— nenhum —</option></select></div>
+          </div>
+          <label>Murti (imagem da divindade) — deixe em branco pra manter a atual</label>
+          <input type="file" id="deidades-arquivo" accept="image/*">
+          <p id="deidades-upload-status" class="upload-status"></p>
+          <img id="deidades-preview" style="display:none; width:120px; height:120px; object-fit:cover; border-radius:12px; margin-top:8px;">
+          <div class="row" style="margin-top:12px;">
+            <div><label>Ordem</label><input type="number" id="deidades-ordem" value="0"></div>
+            <div class="checkbox-row" style="margin-top:32px;"><input type="checkbox" id="deidades-ativo" checked><label style="margin:0;">Ativo</label></div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="saveDeidade()">Salvar deidade</button>
+            <button class="btn" onclick="resetForm('deidades')">Nova deidade</button>
+          </div>
+        </div>
+        <div class="card"><h2>Deidades cadastradas</h2>
+          <table><thead><tr><th>Murti</th><th>Nome</th><th>Slug</th><th></th></tr></thead><tbody id="deidades-table"></tbody></table>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -219,8 +256,8 @@
 
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let session = null;
-  const cache = { mantras: [], yantras: [], yoga: [], textos: [] };
-  const pendingFiles = { mantras: null, yantras: null, yoga: null, yogaVideo: null };
+  const cache = { mantras: [], yantras: [], yoga: [], textos: [], deidades: [] };
+  const pendingFiles = { mantras: null, yantras: null, yoga: null, yogaVideo: null, deidades: null };
   const DIAS = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
 
   /* ---------------- AUTH ---------------- */
@@ -254,14 +291,17 @@
 
   /* ---------------- CARREGAR TUDO ---------------- */
   async function loadAll() {
-    const [m, y, p, t] = await Promise.all([
+    const [m, y, p, t, d] = await Promise.all([
       supabaseClient.from("mantra_mantras").select("*").order("ordem"),
       supabaseClient.from("mantra_yantras").select("*").order("ordem"),
       supabaseClient.from("mantra_praticas_yoga").select("*").order("ordem"),
       supabaseClient.from("mantra_textos").select("*").order("ordem"),
+      supabaseClient.from("mantra_deidades").select("*").order("ordem"),
     ]);
     cache.mantras = m.data || []; cache.yantras = y.data || []; cache.yoga = p.data || []; cache.textos = t.data || [];
+    cache.deidades = d.data || [];
     renderMantrasTable(); renderYantrasTable(); renderYogaTable(); renderTextosTable(); renderDiaForm();
+    renderDeidadesTable(); preencherSelectsDeidade();
   }
 
   function esc(s) { const d = document.createElement("div"); d.textContent = s ?? ""; return d.innerHTML; }
@@ -400,6 +440,72 @@
       const { error } = id ? await supabaseClient.from("mantra_yantras").update(payload).eq("id", id) : await supabaseClient.from("mantra_yantras").insert(payload);
       if (error) throw error;
       resetForm("yantras"); await loadAll();
+    } catch (err) { status.textContent = "Erro: " + err.message; status.classList.add("error"); }
+  }
+
+  /* ============ DEIDADES (Ishta Devata / Murti) ============ */
+  document.getElementById("deidades-arquivo").addEventListener("change", e => {
+    pendingFiles.deidades = e.target.files[0] || null;
+    document.getElementById("deidades-upload-status").textContent = pendingFiles.deidades ? `Selecionado: ${pendingFiles.deidades.name}` : "";
+    if (pendingFiles.deidades) {
+      const preview = document.getElementById("deidades-preview");
+      preview.src = URL.createObjectURL(pendingFiles.deidades); preview.style.display = "block";
+    }
+  });
+  function preencherSelectsDeidade() {
+    const optsYantra = `<option value="">— nenhum —</option>` + cache.yantras.map(y => `<option value="${y.id}">${esc(y.nome)}</option>`).join("");
+    const optsMantra = `<option value="">— nenhum —</option>` + cache.mantras.map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join("");
+    document.getElementById("deidades-yantra").innerHTML = optsYantra;
+    document.getElementById("deidades-mantra").innerHTML = optsMantra;
+  }
+  function renderDeidadesTable() {
+    document.getElementById("deidades-table").innerHTML = cache.deidades.map(d => `
+      <tr><td>${d.murti_url ? `<img class="thumb" src="${d.murti_url}">` : "—"}</td><td>${esc(d.nome)}</td><td>${esc(d.slug)}</td>
+      <td><button class="btn btn-sm" onclick="editDeidade('${d.id}')">Editar</button></td></tr>
+    `).join("") || `<tr><td colspan="4" class="muted">Nenhuma ainda.</td></tr>`;
+  }
+  function editDeidade(id) {
+    const d = cache.deidades.find(x => x.id === id); if (!d) return;
+    document.getElementById("deidades-id").value = d.id;
+    document.getElementById("deidades-nome").value = d.nome || "";
+    document.getElementById("deidades-slug").value = d.slug || "";
+    document.getElementById("deidades-arquetipo").value = d.arquetipo || "";
+    document.getElementById("deidades-descricao").value = d.descricao || "";
+    document.getElementById("deidades-yantra").value = d.yantra_id || "";
+    document.getElementById("deidades-mantra").value = d.mantra_id || "";
+    document.getElementById("deidades-ordem").value = d.ordem || 0;
+    document.getElementById("deidades-ativo").checked = !!d.ativo;
+    document.getElementById("deidades-murti-url").value = d.murti_url || "";
+    const preview = document.getElementById("deidades-preview");
+    if (d.murti_url) { preview.src = d.murti_url; preview.style.display = "block"; } else preview.style.display = "none";
+    document.getElementById("deidades-form-title").textContent = "Editar deidade";
+    pendingFiles.deidades = null; document.getElementById("deidades-arquivo").value = "";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  async function saveDeidade() {
+    const status = document.getElementById("deidades-upload-status");
+    let murtiUrl = document.getElementById("deidades-murti-url").value || null;
+    try {
+      if (pendingFiles.deidades) {
+        status.textContent = "Enviando imagem..."; status.classList.remove("error");
+        murtiUrl = await uploadArquivo(pendingFiles.deidades);
+      }
+      const id = document.getElementById("deidades-id").value;
+      const payload = {
+        nome: document.getElementById("deidades-nome").value.trim(),
+        slug: document.getElementById("deidades-slug").value.trim(),
+        arquetipo: document.getElementById("deidades-arquetipo").value.trim(),
+        descricao: document.getElementById("deidades-descricao").value.trim() || null,
+        yantra_id: document.getElementById("deidades-yantra").value || null,
+        mantra_id: document.getElementById("deidades-mantra").value || null,
+        ordem: parseInt(document.getElementById("deidades-ordem").value) || 0,
+        ativo: document.getElementById("deidades-ativo").checked,
+        murti_url: murtiUrl,
+      };
+      if (!payload.nome || !payload.slug || !payload.arquetipo) { alert("Nome, slug e arquétipo são obrigatórios."); return; }
+      const { error } = id ? await supabaseClient.from("mantra_deidades").update(payload).eq("id", id) : await supabaseClient.from("mantra_deidades").insert(payload);
+      if (error) throw error;
+      resetForm("deidades"); await loadAll();
     } catch (err) { status.textContent = "Erro: " + err.message; status.classList.add("error"); }
   }
 
@@ -581,15 +687,17 @@
   /* ---------------- RESET ---------------- */
   function resetForm(kind) {
     document.querySelectorAll(`#panel-${kind} input[type=text], #panel-${kind} input[type=number], #panel-${kind} textarea`).forEach(el => el.value = el.type === "number" ? 0 : "");
+    document.querySelectorAll(`#panel-${kind} select`).forEach(el => el.value = "");
     document.querySelectorAll(`#panel-${kind} input[type=hidden]`).forEach(el => el.value = "");
     document.querySelectorAll(`#panel-${kind} input[type=checkbox]`).forEach(el => el.checked = true);
     document.querySelectorAll(`#panel-${kind} input[type=file]`).forEach(el => el.value = "");
     document.querySelectorAll(`#panel-${kind} .upload-status`).forEach(el => { el.textContent = ""; el.classList.remove("error"); });
     if (kind === "yantras") document.getElementById("yantras-preview").style.display = "none";
+    if (kind === "deidades") document.getElementById("deidades-preview").style.display = "none";
     if (kind === "yoga") { document.getElementById("yoga-video-preview").style.display = "none"; pendingFiles.yogaVideo = null; }
     pendingFiles[kind] = null;
     const title = document.getElementById(`${kind}-form-title`);
-    if (title) title.textContent = { mantras: "Novo mantra", yantras: "Novo yantra", yoga: "Nova prática", textos: "Novo texto" }[kind];
+    if (title) title.textContent = { mantras: "Novo mantra", yantras: "Novo yantra", yoga: "Nova prática", textos: "Novo texto", deidades: "Nova deidade" }[kind];
   }
 
   document.addEventListener("DOMContentLoaded", checkSession);
