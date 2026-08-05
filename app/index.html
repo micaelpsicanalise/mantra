@@ -366,10 +366,7 @@
 
       <div class="signout-btn" onclick="showView('quiz'); iniciarQuiz();">Escolher / trocar minha divindade de conexão</div>
 
-      <div class="quick-card" id="jyotish-teaser-perfil" onclick="onQuerJyotish()" style="margin-top:10px;">
-        <p class="name">🔭 Descobrir por astrologia védica (Jyotish)</p>
-        <p class="count" id="jyotish-teaser-perfil-sub">Um cálculo real, a partir do seu mapa de nascimento</p>
-      </div>
+      <div id="ishta-perfil-card" style="margin-top:10px;"></div>
 
       <div class="signout-btn" onclick="onSignOut()" style="margin-top:10px;">Sair da conta</div>
 
@@ -504,7 +501,14 @@
   }
 
   function mostrarResultadoIshta(deidade) {
-    document.getElementById("ishta-inicial").textContent = deidade.nome.charAt(0);
+    const el = document.getElementById("ishta-inicial");
+    if (deidade.murti_url) {
+      el.style.background = `url('${deidade.murti_url}') center/cover`;
+      el.textContent = "";
+    } else {
+      el.style.background = "";
+      el.textContent = deidade.nome.charAt(0);
+    }
     document.getElementById("ishta-nome").textContent = deidade.nome;
     document.getElementById("ishta-arquetipo").textContent = deidade.arquetipo;
     document.getElementById("ishta-descricao").textContent = deidade.descricao;
@@ -518,18 +522,29 @@
 
   function renderIshtaCardHome() {
     const el = document.getElementById("ishta-home-card");
-    if (!el) return;
+    const elPerfil = document.getElementById("ishta-perfil-card");
     if (!appState.ishtaDevata) {
-      el.innerHTML = `
+      if (el) el.innerHTML = `
         <div class="quick-card" onclick="showView('quiz'); iniciarQuiz();">
           <p class="name">Descubra sua divindade de conexão</p>
           <p class="count">Quiz de 5 perguntas</p>
         </div>`;
+      if (elPerfil) elPerfil.innerHTML = `
+        <div class="quick-card" id="jyotish-teaser-perfil" onclick="onQuerJyotish()">
+          <p class="name">🔭 Descobrir por astrologia védica (Jyotish)</p>
+          <p class="count" id="jyotish-teaser-perfil-sub">Um cálculo real, a partir do seu mapa de nascimento</p>
+        </div>`;
     } else {
       const d = appState.ishtaDevata;
-      el.innerHTML = `
+      const thumb = d.murti_url ? `<img src="${d.murti_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;float:left;margin-right:10px;">` : "";
+      if (el) el.innerHTML = `
         <div class="quick-card" onclick="onVerYantraIshta()">
-          <p class="name">${esc(d.nome)}</p>
+          ${thumb}<p class="name">${esc(d.nome)}</p>
+          <p class="count">Sua divindade de conexão</p>
+        </div>`;
+      if (elPerfil) elPerfil.innerHTML = `
+        <div class="quick-card" onclick="onVerYantraIshta()">
+          ${thumb}<p class="name">${esc(d.nome)}</p>
           <p class="count">Sua divindade de conexão</p>
         </div>`;
     }
