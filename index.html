@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mantra — mantras, yantras e yoga pra sua prática diária</title>
-<meta name="description" content="Mantras, yantras e práticas de yoga — um espaço sagrado que cabe no bolso. Descubra seu Ishta Devata e volte todo dia.">
+<meta name="description" content="Mantras, yantras e práticas de yoga num espaço sagrado que cabe no bolso. Descubra seu Ishta Devata e volte todo dia.">
 
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#191830">
@@ -17,123 +18,289 @@
 
 <style>
   :root{
-    --bg:#F7F1E6; --ink:#241F33; --ink-soft:#5C5772;
-    --indigo:#2C2A4A; --indigo-dark:#191830;
+    --bg:#F7F1E6; --bg-warm:#F1E5D2; --ink:#241F33; --ink-soft:#5C5772;
+    --indigo:#2C2A4A; --indigo-dark:#141328;
     --saffron:#E08D3C; --saffron-soft:#F4DDBB;
-    --line:rgba(36,31,51,0.14);
+    --rose:#B5563C;
+    --line:rgba(36,31,51,0.13);
+    --line-on-dark:rgba(255,255,255,0.12);
+    --container:1180px;
   }
   *{ box-sizing:border-box; }
-  html{ background:var(--bg); }
+  html{ background:var(--bg); scroll-behavior:smooth; }
   body{
     margin:0; background:var(--bg); color:var(--ink);
-    font-family:'Inter', sans-serif; min-height:100vh; min-height:100dvh;
+    font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;
   }
-  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:500; margin:0; }
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:500; margin:0; letter-spacing:-0.01em; }
   p{ margin:0; }
-  a{ text-decoration:none; }
+  a{ text-decoration:none; color:inherit; }
+  img,svg{ display:block; max-width:100%; }
+  .wrap{ width:100%; max-width:var(--container); margin:0 auto; padding:0 24px; }
+  .eyebrow{ font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--saffron); font-weight:700; }
 
-  .device{ width:100%; max-width:520px; margin:0 auto; min-height:100vh; min-height:100dvh; }
-  @media (min-width:640px){ .device{ padding-top:24px; } }
-
-  .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--saffron); font-weight:600; }
-
-  .cta-btn{
-    display:flex; align-items:center; justify-content:center;
-    background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:14px;
-    padding:13px 20px; font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600;
-    cursor:pointer; width:100%; max-width:280px;
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
   }
 
-  /* hero */
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky; top:0; z-index:50; background:rgba(20,19,40,0.92);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-on-dark);
+  }
+  .nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .nav .brand{ display:flex; align-items:center; gap:9px; font-family:'Fraunces',serif; font-size:19px; color:#fff; font-weight:600; }
+  .nav .brand .om{ color:var(--saffron); font-size:20px; }
+  .nav-links{ display:none; align-items:center; gap:30px; font-size:13.5px; color:#D8D3E6; font-weight:500; }
+  .nav-links a{ transition:color .15s ease; }
+  .nav-links a:hover{ color:#fff; }
+  @media (min-width:760px){ .nav-links{ display:flex; } }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border-radius:12px; padding:12px 22px; font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600;
+    cursor:pointer; border:1px solid transparent; white-space:nowrap;
+  }
+  .btn-primary{ background:var(--saffron); color:#1A1626; }
+  .btn-primary:hover{ background:#EB9C51; }
+  .btn-ghost{ background:transparent; color:#fff; border-color:var(--line-on-dark); }
+  .btn-ghost:hover{ border-color:rgba(255,255,255,0.3); }
+  .btn-dark{ background:var(--indigo-dark); color:#fff; }
+  .btn-dark:hover{ background:#211E3C; }
+  .nav .btn{ padding:9px 16px; font-size:12.5px; }
+
+  /* ---------- hero ---------- */
   .hero{
-    background:var(--indigo-dark); color:#fff; padding:52px 24px 40px;
-    position:relative; overflow:hidden; text-align:center;
+    background:var(--indigo-dark); color:#fff; position:relative; overflow:hidden;
+    padding:64px 0 0;
   }
-  .hero .ring{ position:absolute; border:1px solid rgba(255,255,255,0.10); border-radius:50%; }
-  .hero .ring.r1{ width:320px; height:320px; top:-120px; left:50%; transform:translateX(-50%); }
-  .hero .ring.r2{ width:220px; height:220px; top:-70px; left:50%; transform:translateX(-50%); }
-  .hero .ring.r3{ width:120px; height:120px; top:-20px; left:50%; transform:translateX(-50%); }
-  .hero .om{ font-size:34px; color:var(--saffron); position:relative; }
-  .hero h1{ font-size:32px; color:#fff; margin-top:14px; position:relative; }
-  .hero .tagline{ font-size:13.5px; color:#D8D3E6; line-height:1.6; margin-top:10px; max-width:300px; margin-left:auto; margin-right:auto; position:relative; }
-  .hero .cta-btn{ margin:24px auto 0; position:relative; }
+  .hero .wrap{ position:relative; display:grid; grid-template-columns:1fr; gap:36px; align-items:center; padding-bottom:56px; }
+  @media (min-width:900px){ .hero .wrap{ grid-template-columns:1.05fr 0.95fr; gap:20px; padding-bottom:76px; } }
+  .hero-copy{ text-align:center; }
+  @media (min-width:900px){ .hero-copy{ text-align:left; } }
+  .hero h1{ font-size:clamp(34px,6vw,56px); color:#fff; margin-top:16px; line-height:1.04; }
+  .hero .tagline{ font-size:15.5px; color:#C9C3DE; line-height:1.65; margin-top:16px; max-width:420px; }
+  @media (min-width:900px){ .hero .tagline{ margin-left:0; margin-right:0; } }
+  .hero-copy .tagline{ margin-left:auto; margin-right:auto; }
+  @media (min-width:900px){ .hero-copy .tagline{ margin-left:0; margin-right:0; } }
+  .hero-ctas{ display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; justify-content:center; }
+  @media (min-width:900px){ .hero-ctas{ justify-content:flex-start; } }
 
-  .landing-section{ padding:32px 24px; }
-  .landing-section h3{ font-size:16px; margin-bottom:4px; }
-  .landing-section .sub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:16px; }
+  .mandala-wrap{ position:relative; aspect-ratio:1/1; max-width:420px; margin:0 auto; }
+  .mandala-wrap svg{ width:100%; height:100%; }
+  .ring-spin{ animation:spin 90s linear infinite; transform-origin:center; }
+  .ring-spin-rev{ animation:spinrev 70s linear infinite; transform-origin:center; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @keyframes spinrev{ to{ transform:rotate(-360deg); } }
 
-  .pillar-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .pillar-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; }
-  .pillar-card .glyph{ width:30px; height:30px; border-radius:9px; background:var(--saffron-soft); display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
-  .pillar-card .glyph svg{ width:15px; height:15px; }
-  .pillar-card .name{ font-size:13.5px; font-weight:600; }
-  .pillar-card .desc{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; line-height:1.4; }
+  /* ---------- sanskrit ticker ---------- */
+  .ticker{ background:var(--saffron); overflow:hidden; padding:13px 0; }
+  .ticker-track{ display:flex; width:max-content; gap:36px; animation:ticker 34s linear infinite; }
+  .ticker-track span{ font-family:'Fraunces',serif; font-size:15px; color:#1A1626; white-space:nowrap; font-weight:500; }
+  .ticker-track span.dot{ color:rgba(26,22,38,0.4); }
+  @keyframes ticker{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 
-  .ishta-highlight{
-    background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px;
-    display:flex; flex-direction:column; gap:6px; margin:0 24px 32px;
-  }
-  .ishta-highlight .eyebrow{ color:var(--saffron); }
-  .ishta-highlight h3{ font-size:16px; margin-top:4px; }
-  .ishta-highlight p{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  /* ---------- section shell ---------- */
+  section{ padding:76px 0; }
+  .section-head{ max-width:520px; margin-bottom:40px; }
+  .section-head.center{ margin-left:auto; margin-right:auto; text-align:center; }
+  .section-head h2{ font-size:clamp(26px,4vw,36px); margin-top:8px; }
+  .section-head .sub{ font-size:14.5px; color:var(--ink-soft); margin-top:12px; line-height:1.6; }
 
-  .landing-cta{ padding:8px 24px 48px; text-align:center; }
-  .landing-cta .cta-btn{ margin:0 auto; background:var(--indigo-dark); color:#fff; border:none; }
-  .landing-cta .fineprint{ font-size:11px; color:var(--ink-soft); margin-top:12px; }
+  /* ---------- pillars ---------- */
+  .pillar-grid{ display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:620px){ .pillar-grid{ grid-template-columns:1fr 1fr; } }
+  @media (min-width:1000px){ .pillar-grid{ grid-template-columns:repeat(4,1fr); } }
+  .pillar-card{ background:#fff; border:1px solid var(--line); border-radius:18px; padding:24px; transition:transform .18s ease, box-shadow .18s ease; }
+  .pillar-card:hover{ transform:translateY(-3px); box-shadow:0 14px 30px -18px rgba(36,31,51,0.35); }
+  .pillar-card .glyph{ width:38px; height:38px; border-radius:11px; background:var(--saffron-soft); display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .pillar-card .glyph svg{ width:19px; height:19px; }
+  .pillar-card .name{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; }
+  .pillar-card .desc{ font-size:12.8px; color:var(--ink-soft); margin-top:7px; line-height:1.55; }
 
-  footer{ text-align:center; padding:0 24px 32px; font-size:11px; color:var(--ink-soft); }
+  /* ---------- ishta ---------- */
+  .ishta{ background:var(--bg-warm); }
+  .ishta .wrap{ display:grid; grid-template-columns:1fr; gap:44px; align-items:center; }
+  @media (min-width:900px){ .ishta .wrap{ grid-template-columns:1fr 0.85fr; gap:60px; } }
+  .ishta-copy h2{ font-size:clamp(26px,4vw,34px); margin-top:8px; }
+  .ishta-copy .sub{ font-size:14.5px; color:var(--ink-soft); margin-top:14px; line-height:1.65; max-width:460px; }
+  .ishta-methods{ margin-top:28px; display:flex; flex-direction:column; gap:14px; }
+  .ishta-method{ display:flex; gap:14px; align-items:flex-start; }
+  .ishta-method .num{ font-family:'Fraunces',serif; font-size:14px; color:var(--saffron); border:1px solid var(--line); border-radius:50%; width:30px; height:30px; flex:none; display:flex; align-items:center; justify-content:center; }
+  .ishta-method .t{ font-size:14px; font-weight:600; }
+  .ishta-method .d{ font-size:12.8px; color:var(--ink-soft); margin-top:3px; line-height:1.55; }
+  .yantra-frame{ background:var(--indigo-dark); border-radius:22px; padding:34px; aspect-ratio:1/1; max-width:380px; margin:0 auto; display:flex; align-items:center; justify-content:center; }
+  .yantra-frame svg{ width:100%; height:100%; }
+
+  /* ---------- quote divider ---------- */
+  .quote-band{ text-align:center; padding:88px 24px; }
+  .quote-band .sanskrit{ font-family:'Fraunces',serif; font-size:clamp(20px,3.2vw,28px); color:var(--indigo-dark); max-width:640px; margin:0 auto; line-height:1.5; }
+  .quote-band .translation{ font-size:12.5px; color:var(--ink-soft); margin-top:14px; letter-spacing:.03em; text-transform:uppercase; }
+  .quote-band .rule{ width:56px; height:1px; background:var(--saffron); margin:0 auto 22px; }
+
+  /* ---------- final cta ---------- */
+  .final-cta{ background:var(--indigo-dark); color:#fff; text-align:center; position:relative; overflow:hidden; }
+  .final-cta .wrap{ position:relative; padding:20px 24px; }
+  .final-cta h2{ color:#fff; font-size:clamp(26px,4.4vw,38px); max-width:520px; margin:0 auto; line-height:1.15; }
+  .final-cta .fineprint{ font-size:12px; color:#B7B0CC; margin-top:16px; }
+  .final-cta .btn{ margin-top:26px; }
+
+  /* ---------- footer ---------- */
+  footer{ background:var(--bg-warm); border-top:1px solid var(--line); }
+  footer .wrap{ padding:36px 24px; display:flex; flex-direction:column; gap:18px; align-items:center; text-align:center; }
+  @media (min-width:700px){ footer .wrap{ flex-direction:row; justify-content:space-between; text-align:left; } }
+  footer .f-brand{ display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-size:15px; color:var(--ink); }
+  footer .f-links{ display:flex; gap:22px; font-size:12.5px; color:var(--ink-soft); }
+  footer .f-copy{ font-size:11.5px; color:var(--ink-soft); }
 </style>
 </head>
 <body>
-  <div class="device">
 
-    <div class="hero">
-      <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
-      <p class="om">🕉</p>
-      <h1>Mantra</h1>
-      <p class="tagline">Mantras, yantras e práticas de yoga. Um espaço sagrado e de estudo, pra você voltar todo dia.</p>
-      <a class="cta-btn" href="app/">Abrir o Mantra</a>
+  <nav class="nav">
+    <div class="wrap">
+      <a class="brand" href="#top"><span class="om">🕉</span>Mantra</a>
+      <div class="nav-links">
+        <a href="#praticas">Práticas</a>
+        <a href="#ishta">Ishta Devata</a>
+        <a href="#sobre">Sobre</a>
+      </div>
+      <a class="btn btn-primary" href="app/">Abrir o app</a>
     </div>
+  </nav>
 
-    <div class="landing-section">
-      <h3>Tudo o que você precisa pra sua prática diária</h3>
-      <p class="sub">Um catálogo vivo, crescendo toda semana.</p>
+  <header class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-copy">
+        <p class="eyebrow">Prática védica diária</p>
+        <h1>Um espaço sagrado que cabe no bolso.</h1>
+        <p class="tagline">Mantras, yantras e yoga reunidos num só lugar, com sânscrito, transliteração e significado, pra você voltar todo dia sem perder o fio da prática.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="app/">Abrir o Mantra</a>
+          <a class="btn btn-ghost" href="#ishta">Descobrir meu Ishta Devata</a>
+        </div>
+      </div>
+      <div class="mandala-wrap" aria-hidden="true">
+        <svg viewBox="0 0 400 400">
+          <g class="ring-spin">
+            <circle cx="200" cy="200" r="180" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+            <circle cx="200" cy="200" r="180" fill="none" stroke="#E08D3C" stroke-width="1.4" stroke-dasharray="2 10" opacity="0.7"/>
+          </g>
+          <g class="ring-spin-rev">
+            <circle cx="200" cy="200" r="138" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+            <polygon points="200,84 302,264 98,264" fill="none" stroke="#E08D3C" stroke-width="1.2" opacity="0.55"/>
+            <polygon points="200,316 98,136 302,136" fill="none" stroke="#E08D3C" stroke-width="1.2" opacity="0.55"/>
+          </g>
+          <g class="ring-spin">
+            <circle cx="200" cy="200" r="92" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+          </g>
+          <circle cx="200" cy="200" r="50" fill="none" stroke="#E08D3C" stroke-width="1.4"/>
+          <text x="200" y="212" text-anchor="middle" font-size="40" fill="#E08D3C" font-family="Fraunces, serif">ॐ</text>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>ॐ</span><span class="dot">·</span><span>So'ham</span><span class="dot">·</span><span>Lokah Samastah Sukhino Bhavantu</span><span class="dot">·</span><span>Sat Chit Ananda</span><span class="dot">·</span><span>Om Shanti Shanti Shanti</span><span class="dot">·</span>
+      <span>ॐ</span><span class="dot">·</span><span>So'ham</span><span class="dot">·</span><span>Lokah Samastah Sukhino Bhavantu</span><span class="dot">·</span><span>Sat Chit Ananda</span><span class="dot">·</span><span>Om Shanti Shanti Shanti</span><span class="dot">·</span>
+    </div>
+  </div>
+
+  <section id="praticas">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Catálogo vivo</p>
+        <h2>Tudo o que sua prática pede, num lugar só.</h2>
+        <p class="sub">Áudios, geometrias e leituras selecionadas com cuidado, crescendo toda semana.</p>
+      </div>
       <div class="pillar-grid">
         <div class="pillar-card">
           <div class="glyph"><svg viewBox="0 0 24 24" fill="none"><path d="M4 14v-4M8 17v-10M12 19v-14M16 15v-6M20 12v0" stroke="#241F33" stroke-width="1.8" stroke-linecap="round"/></svg></div>
           <p class="name">Mantras</p>
-          <p class="desc">Áudios guiados com sânscrito, transliteração e significado.</p>
+          <p class="desc">Áudios guiados com sânscrito, transliteração e significado, pra repetir com presença.</p>
         </div>
         <div class="pillar-card">
           <div class="glyph"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="#241F33" stroke-width="1.6"/><path d="M12 5 18 15H6z" stroke="#241F33" stroke-width="1.4"/></svg></div>
           <p class="name">Yantras</p>
-          <p class="desc">Meditação visual guiada nas geometrias sagradas.</p>
+          <p class="desc">Meditação visual guiada nas geometrias sagradas, pra fixar a mente num ponto só.</p>
         </div>
         <div class="pillar-card">
           <div class="glyph"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="6" r="2.4" stroke="#241F33" stroke-width="1.6"/><path d="M12 9v6M8 20l4-5 4 5M8 12l4 1 4-1" stroke="#241F33" stroke-width="1.6" stroke-linecap="round"/></svg></div>
           <p class="name">Yoga</p>
-          <p class="desc">Práticas em vídeo e áudio, por nível e objetivo.</p>
+          <p class="desc">Práticas em vídeo e áudio, organizadas por nível e objetivo do dia.</p>
         </div>
         <div class="pillar-card">
           <div class="glyph"><svg viewBox="0 0 24 24" fill="none"><path d="M6 4h9l3 3v13H6z" stroke="#241F33" stroke-width="1.6"/><path d="M9 11h6M9 15h6" stroke="#241F33" stroke-width="1.4" stroke-linecap="round"/></svg></div>
           <p class="name">Textos</p>
-          <p class="desc">Leituras clássicas da tradição védica, direto ao ponto.</p>
+          <p class="desc">Leituras clássicas da tradição védica, traduzidas direto ao ponto.</p>
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="ishta-highlight">
-      <p class="eyebrow">Sua conexão pessoal</p>
-      <h3>Descubra seu Ishta Devata</h3>
-      <p>Um quiz de 5 perguntas ou, se preferir, um cálculo real de astrologia védica (Jyotish) a partir do seu mapa de nascimento, pra encontrar a divindade com quem você mais se conecta.</p>
+  <section class="ishta" id="ishta">
+    <div class="wrap">
+      <div class="ishta-copy">
+        <p class="eyebrow">Sua conexão pessoal</p>
+        <h2>Descubra seu Ishta Devata.</h2>
+        <p class="sub">A divindade pessoal com quem você mais se conecta na tradição védica, encontrada do jeito que fizer sentido pra você.</p>
+        <div class="ishta-methods">
+          <div class="ishta-method">
+            <div class="num">1</div>
+            <div>
+              <p class="t">Quiz de 5 perguntas</p>
+              <p class="d">Rápido e intuitivo, direto pela sua forma de sentir e praticar.</p>
+            </div>
+          </div>
+          <div class="ishta-method">
+            <div class="num">2</div>
+            <div>
+              <p class="t">Cálculo Jyotish</p>
+              <p class="d">Astrologia védica real a partir do seu mapa de nascimento, com data, hora e local.</p>
+            </div>
+          </div>
+        </div>
+        <a class="btn btn-dark" href="app/" style="margin-top:28px;">Fazer o quiz agora</a>
+      </div>
+      <div class="yantra-frame" aria-hidden="true">
+        <svg viewBox="0 0 300 300">
+          <circle cx="150" cy="150" r="130" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+          <polygon points="150,40 250,220 50,220" fill="none" stroke="#E08D3C" stroke-width="1.3"/>
+          <polygon points="150,260 50,80 250,80" fill="none" stroke="#E08D3C" stroke-width="1.3"/>
+          <polygon points="150,80 220,200 80,200" fill="none" stroke="#E08D3C" stroke-width="1" opacity="0.7"/>
+          <polygon points="150,220 80,100 220,100" fill="none" stroke="#E08D3C" stroke-width="1" opacity="0.7"/>
+          <circle cx="150" cy="150" r="14" fill="#E08D3C"/>
+        </svg>
+      </div>
     </div>
+  </section>
 
-    <div class="landing-cta">
-      <a class="cta-btn" href="app/">Abrir o Mantra</a>
-      <p class="fineprint">Entrar com Google, direto no app.</p>
-    </div>
-
-    <footer>Mantra</footer>
+  <div class="quote-band" id="sobre">
+    <div class="rule"></div>
+    <p class="sanskrit">"योगश्चित्तवृत्तिनिरोधः"</p>
+    <p class="translation">Yoga é o silenciamento das flutuações da mente — Yoga Sutras, I.2</p>
   </div>
+
+  <section class="final-cta">
+    <div class="wrap">
+      <h2>Sua prática começa com um gesto.</h2>
+      <a class="btn btn-primary" href="app/">Abrir o Mantra</a>
+      <p class="fineprint">Entrar com Google, direto no navegador.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <a class="f-brand" href="#top"><span style="color:var(--saffron)">🕉</span>Mantra</a>
+      <div class="f-links">
+        <a href="#praticas">Práticas</a>
+        <a href="#ishta">Ishta Devata</a>
+        <a href="app/">Abrir o app</a>
+      </div>
+      <p class="f-copy">© 2026 Mantra</p>
+    </div>
+  </footer>
+
 </body>
 </html>
