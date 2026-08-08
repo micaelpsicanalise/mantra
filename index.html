@@ -124,11 +124,12 @@
   @media (min-width:900px){ .ishta .wrap{ grid-template-columns:1fr 0.85fr; gap:60px; } }
   .ishta-copy h2{ font-size:clamp(26px,4vw,34px); margin-top:8px; }
   .ishta-copy .sub{ font-size:14.5px; color:var(--ink-soft); margin-top:14px; line-height:1.65; max-width:460px; }
-  .ishta-methods{ margin-top:28px; display:flex; flex-direction:column; gap:14px; }
-  .ishta-method{ display:flex; gap:14px; align-items:flex-start; }
-  .ishta-method .num{ font-family:'Fraunces',serif; font-size:14px; color:var(--saffron); border:1px solid var(--line); border-radius:50%; width:30px; height:30px; flex:none; display:flex; align-items:center; justify-content:center; }
-  .ishta-method .t{ font-size:14px; font-weight:600; }
-  .ishta-method .d{ font-size:12.8px; color:var(--ink-soft); margin-top:3px; line-height:1.55; }
+  .method-toggle{ display:inline-flex; background:#fff; border:1px solid var(--line); border-radius:100px; padding:4px; gap:4px; }
+  .toggle-btn{ border:none; background:transparent; padding:9px 18px; border-radius:100px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:background .15s ease, color .15s ease; }
+  .toggle-btn.active{ background:var(--indigo-dark); color:#fff; }
+  .method-panel{ margin-top:20px; min-height:64px; }
+  .method-panel .t{ font-size:14.5px; font-weight:600; }
+  .method-panel .d{ font-size:12.8px; color:var(--ink-soft); margin-top:5px; line-height:1.6; max-width:440px; }
   .yantra-frame{ background:var(--indigo-dark); border-radius:22px; padding:34px; aspect-ratio:1/1; max-width:380px; margin:0 auto; display:flex; align-items:center; justify-content:center; }
   .yantra-frame svg{ width:100%; height:100%; }
 
@@ -245,23 +246,21 @@
         <p class="eyebrow">Sua conexão pessoal</p>
         <h2>Descubra seu Ishta Devata.</h2>
         <p class="sub">A divindade pessoal com quem você mais se conecta na tradição védica, encontrada do jeito que fizer sentido pra você.</p>
-        <div class="ishta-methods">
-          <div class="ishta-method">
-            <div class="num">1</div>
-            <div>
-              <p class="t">Quiz de 5 perguntas</p>
-              <p class="d">Rápido e intuitivo, direto pela sua forma de sentir e praticar.</p>
-            </div>
-          </div>
-          <div class="ishta-method">
-            <div class="num">2</div>
-            <div>
-              <p class="t">Cálculo Jyotish</p>
-              <p class="d">Astrologia védica real a partir do seu mapa de nascimento, com data, hora e local.</p>
-            </div>
-          </div>
+        <div class="method-toggle" role="tablist" aria-label="Escolher método pra descobrir seu Ishta Devata">
+          <button class="toggle-btn active" id="toggle-quiz" onclick="setIshtaMethod('quiz')" role="tab" aria-selected="true">Quiz rápido</button>
+          <button class="toggle-btn" id="toggle-jyotish" onclick="setIshtaMethod('jyotish')" role="tab" aria-selected="false">Cálculo Jyotish</button>
         </div>
-        <a class="btn btn-dark" href="app/" style="margin-top:28px;">Fazer o quiz agora</a>
+
+        <div class="method-panel" id="panel-quiz">
+          <p class="t">5 perguntas, cerca de um minuto</p>
+          <p class="d">Responda pela forma como você sente e pratica hoje. No fim, você recebe sua divindade de conexão, já com yantra e mantra pra começar.</p>
+        </div>
+        <div class="method-panel" id="panel-jyotish" style="display:none;">
+          <p class="t">Astrologia védica real, a partir do seu mapa</p>
+          <p class="d">Informe data, hora e local de nascimento. O Mantra calcula seu mapa (Jyotish) pra chegar na divindade certa pra você.</p>
+        </div>
+
+        <a class="btn btn-dark" id="ishta-cta" href="app/?ishta=quiz" style="margin-top:24px;">Fazer o quiz agora</a>
       </div>
       <div class="yantra-frame" aria-hidden="true">
         <svg viewBox="0 0 300 300">
@@ -302,5 +301,19 @@
     </div>
   </footer>
 
+<script>
+  function setIshtaMethod(method) {
+    const isQuiz = method === "quiz";
+    document.getElementById("toggle-quiz").classList.toggle("active", isQuiz);
+    document.getElementById("toggle-jyotish").classList.toggle("active", !isQuiz);
+    document.getElementById("toggle-quiz").setAttribute("aria-selected", isQuiz);
+    document.getElementById("toggle-jyotish").setAttribute("aria-selected", !isQuiz);
+    document.getElementById("panel-quiz").style.display = isQuiz ? "block" : "none";
+    document.getElementById("panel-jyotish").style.display = isQuiz ? "none" : "block";
+    const cta = document.getElementById("ishta-cta");
+    cta.href = "app/?ishta=" + method;
+    cta.textContent = isQuiz ? "Fazer o quiz agora" : "Calcular meu mapa";
+  }
+</script>
 </body>
 </html>

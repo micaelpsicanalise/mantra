@@ -21,6 +21,8 @@
     --indigo:#2C2A4A; --indigo-dark:#191830;
     --saffron:#E08D3C; --saffron-soft:#F4DDBB;
     --line:rgba(36,31,51,0.14);
+    --shadow-sm:0 1px 2px rgba(36,31,51,0.05);
+    --shadow-md:0 14px 30px -18px rgba(36,31,51,0.38);
   }
   *{ box-sizing:border-box; }
   html{ background:var(--bg); }
@@ -36,6 +38,43 @@
 
   .view{ display:none; flex:1; flex-direction:column; padding:20px 20px 0; overflow-y:auto; }
   .view.active{ display:flex; }
+
+  /* ---------- dashboard (telas largas) ---------- */
+  @media (min-width:900px){
+    .device{ max-width:1100px; padding-top:0; }
+    .login-view{ max-width:none; }
+    .view{ padding:36px 44px 44px 152px; position:relative; min-height:100vh; }
+    .view.login-view{ padding:0 !important; }
+
+    .tabbar{
+      position:fixed; left:0; top:0; bottom:0; width:112px; margin-top:0;
+      flex-direction:column; justify-content:flex-start; align-items:center;
+      gap:10px; padding:96px 12px 24px; border-top:none; border-right:1px solid var(--line);
+      background:#fff; z-index:40;
+    }
+    .tabbar::before{
+      content:"🕉"; position:absolute; top:26px; left:0; right:0; text-align:center;
+      font-size:22px; color:var(--saffron);
+    }
+    .tab{ flex-direction:column; gap:6px; width:88px; padding:10px 6px; border-radius:14px; }
+    .tab.active{ background:var(--saffron-soft); }
+    .tab:nth-child(1) .glyph{ border-radius:50%; }
+    .tab:nth-child(2) .glyph{ transform:rotate(45deg); border-radius:5px; }
+    .tab:nth-child(3) .glyph{ border-radius:50% 50% 6px 6px; }
+
+    #view-home{ display:grid; grid-template-columns:1.5fr 1fr; gap:18px; align-content:start; }
+    #view-home .top-row{ grid-column:1/-1; margin-bottom:8px; }
+    #view-home #day-card{ grid-column:1; grid-row:2; margin-bottom:0; }
+    #view-home #ishta-home-card{ grid-column:2; grid-row:2/4; margin-bottom:0; }
+    #view-home .stat-row{ grid-column:1; grid-row:3; margin-bottom:0; }
+    #view-home .quick-grid{ grid-column:1/-1; grid-row:4; margin-bottom:0; grid-template-columns:repeat(4,1fr); }
+
+    #biblioteca-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; align-content:start; }
+    #biblioteca-list .list-item{ margin-bottom:0; flex-direction:column; align-items:flex-start; gap:10px; padding:16px; }
+    #biblioteca-list .list-item .chev{ display:none; }
+
+    #view-player, #view-yantra, #view-texto{ max-width:640px; }
+  }
 
   .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--saffron); font-weight:600; }
 
@@ -79,9 +118,11 @@
   .day-card .ring{ position:absolute; right:-30px; top:-30px; width:140px; height:140px; border:1px solid rgba(255,255,255,0.14); border-radius:50%; }
   .day-card .ring.r2{ right:-10px; top:-10px; width:90px; height:90px; }
   .day-card .btn-inline{ margin-top:14px; display:inline-flex; background:var(--saffron); color:var(--indigo-dark); font-weight:600; font-size:12.5px; padding:9px 16px; border-radius:100px; cursor:pointer; }
+  .day-card{ box-shadow:var(--shadow-md); cursor:pointer; transition:transform .15s ease; }
+  .day-card:hover{ transform:translateY(-2px); }
 
   .stat-row{ display:flex; gap:12px; margin-bottom:18px; }
-  .stat{ flex:1; background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; text-align:center; }
+  .stat{ flex:1; background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; text-align:center; box-shadow:var(--shadow-sm); }
   .stat .num{ font-family:'Fraunces', serif; font-size:24px; }
   .stat .label{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
 
@@ -89,7 +130,9 @@
   .quick-card{
     background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px;
     cursor:pointer; display:flex; flex-direction:column; gap:8px;
+    box-shadow:var(--shadow-sm); transition:transform .15s ease, box-shadow .15s ease;
   }
+  .quick-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
   .quick-card .glyph{ width:30px; height:30px; border-radius:9px; background:var(--saffron-soft); display:flex; align-items:center; justify-content:center; }
   .quick-card .glyph svg{ width:15px; height:15px; }
   .quick-card .name{ font-size:13.5px; font-weight:600; }
@@ -103,7 +146,8 @@
   }
   .cat-tab.active{ background:var(--indigo-dark); color:#fff; border-color:var(--indigo-dark); }
 
-  .list-item{ display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer; }
+  .list-item{ display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer; box-shadow:var(--shadow-sm); transition:transform .15s ease, box-shadow .15s ease; }
+  .list-item:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
   .list-item .dot{ width:38px; height:38px; border-radius:10px; background:var(--saffron-soft); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:14px; flex:none; overflow:hidden; }
   .list-item .dot img{ width:100%; height:100%; object-fit:cover; }
   .list-item .meta{ flex:1; min-width:0; }
@@ -683,7 +727,11 @@
     if (!session) return showView("login");
     appState.user = session.user;
     await Promise.all([loadCatalogo(), loadHome(), loadPerfil(), loadIshtaDevata()]);
-    showView("home");
+
+    const metodo = new URLSearchParams(window.location.search).get("ishta");
+    if (metodo === "quiz") { showView("quiz"); iniciarQuiz(); }
+    else if (metodo === "jyotish") { showView("nascimento"); }
+    else { showView("home"); }
   }
 
   /* ---------------- CATÁLOGO ---------------- */
